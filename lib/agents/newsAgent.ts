@@ -1,37 +1,61 @@
 // lib/agents/newsAgent.ts
 import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-import { tavilyTool, duckduckgoTool } from "@/app/api/tools/news";
+import { searchTavilyNews } from "@/app/api/tools/news";
 
 
 const llm = new ChatGroq({
-    model: "llama-3.3-70b-versatile",
+    model: process.env.GROQ_MODEL,
     temperature: 0.2,
     maxTokens: 1000,
 });
 
 
-let _agent: any = null;
+export async function getNewsAgent(userQuery: string) {
+    let newsContent = "No recent coverage found.";
 
-export function getNewsAgent() {
-    if (_agent) return _agent;
+    try {
+        const response = await searchTavilyNews(userQuery);
 
-    _agent = createAgent({
-        model: llm as any,
-        tools: [tavilyTool, duckduckgoTool], // langchain will decide when to call which tool
+        if (response?.results && Array.isArray(response.results) && response.results.length > 0) {
+            const newsItems = response.results.slice(0, 3);
+            newsContent = newsItems
+                .map((item: any) => {
+                    const title = item.title || "Untitled";
+                    const snippet = item.snippet || item.description || "No description";
+                    const source = item.source || "Unknown";
+                    return `• **${title}** (${source})\n  ${snippet}`;
+                })
+                .join("\n\n");
+        }
+    } catch (err) {
+        console.error("[newsAgent] News fetch error:", err);
+    }
+
+    // Create agent with news already loaded
+    const agent = createAgent({
+        model: llm,
+        tools: [],  // No tools - news is pre-fetched
         systemPrompt: `
-You are NewsForge — an expert, concise real-time news curator.
-When asked for current or factual information, DO NOT hallucinate.
-Preferred tool order: tavily_search then duckduckgo_search.
-Tools return JSON arrays of items. Use at most top 3 items and format answer as:
-• Headline — Source (relative time)
-→ 1-sentence summary
+You are NewsForge — an expert AI news analyst.
 
-If tools return no results, reply: "No recent coverage found. Want a deep dive on any story?"
-    `.trim(),
+Analyze the following news data and respond with ONLY valid JSON (no other text):
+{
+  "summary": "2-3 sentence summary of the key points",
+  "sentiment": "positive or negative or neutral"
+}
+
+Rules:
+- Respond with ONLY the JSON object
+- No markdown, explanations, or extra text
+- Sentiment must be: positive, negative, or neutral
+
+News data:
+${newsContent}
+        `.trim(),
     });
 
-    return _agent;
+    return agent;
 }
 
 

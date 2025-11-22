@@ -77,20 +77,6 @@ export default function ChatPage() {
     }
   };
 
-  function extractAssistantText(json: any): string {
-    try {
-      const msgs = json?.raw?.messages;
-      if (!Array.isArray(msgs)) return "";
-
-      // find last AIMessage
-      const aiMsg = msgs.reverse().find(m => m.id?.includes("AIMessage"));
-
-      return aiMsg?.kwargs?.content ?? "";
-    } catch (e) {
-      return "";
-    }
-  }
-
   // send user message -> call API -> append assistant response
   const sendMessage = async (text: string) => {
     if (!text || !text.trim()) return;
@@ -133,15 +119,13 @@ export default function ChatPage() {
       }
 
       const json = await res.json();
-
-      // Defensive extraction: server returns either assistant:string or raw object
-      const assistantText = extractAssistantText(json);
+      console.log("API response:", json);
 
       const assistantMsg: ChatMsg = {
         id: `a-${Date.now()}`,
         role: "assistant",
-        content: assistantText.trim(),
-        createdAt: Date.now(),
+        content: json.assistant,
+        createdAt: Date.now()
       };
 
       // append assistant
