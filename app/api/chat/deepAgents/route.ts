@@ -60,6 +60,7 @@ You have access to an internet search tool as your primary means of gathering in
 Use this to run an internet search for a given query. You can specify the max number of results to return, the topic, and whether raw content should be included.
 `;
 
+
 const agent = createDeepAgent({
     tools: [internetSearch],
     systemPrompt: researchInstructions,

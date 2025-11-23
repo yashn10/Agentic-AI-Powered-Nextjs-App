@@ -21,6 +21,7 @@ import {
   Sparkles,
   ArrowLeft,
   Settings,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
@@ -32,11 +33,21 @@ const agentConfig: Record<string, any> = {
   interview: { name: 'Live Interview Coach', icon: '🎙️', gradient: 'from-rose-400 to-pink-500' },
 };
 
+type NewsSource = {
+  title: string;
+  url: string;
+  source: string;
+};
+
 type ChatMsg = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt?: number;
+  metadata?: {
+    sentiment?: string;
+    sources?: NewsSource[];
+  };
 };
 
 export default function ChatPage() {
@@ -88,26 +99,27 @@ export default function ChatPage() {
       createdAt: Date.now(),
     };
 
-    // optimistic update
     setMessages((s) => {
       const next = [...s, userMsg];
-      messagesRef.current = next; // keep ref in sync immediately
+      messagesRef.current = next;
       return next;
     });
     setInput("");
     setIsLoading(true);
 
     try {
-      // read the up-to-date messages from the ref
-      const payloadMessages = [
-        ...messagesRef.current.map((m) => ({ role: m.role, content: m.content })),
-        { role: "user", content: text.trim() },
-      ];
+      // ✅ FIXED: Send ALL messages from conversation history
+      const payloadMessages = messagesRef.current.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      console.log(`[Chat] Sending ${payloadMessages.length} messages to agent`);
 
       const res = await fetch(`/api/chat/${agentId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: payloadMessages }),
+        body: JSON.stringify({ messages: payloadMessages }),  // ✅ Full history
       });
 
       if (!res.ok) {
@@ -121,14 +133,38 @@ export default function ChatPage() {
       const json = await res.json();
       console.log("API response:", json);
 
-      const assistantMsg: ChatMsg = {
-        id: `a-${Date.now()}`,
-        role: "assistant",
-        content: json.assistant,
-        createdAt: Date.now()
-      };
+      let assistantMsg: ChatMsg;
 
-      // append assistant
+      if (agentId === 'news' && json.assistant) {
+        assistantMsg = {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          content: json.assistant.summary || "No summary available",
+          createdAt: Date.now(),
+          metadata: {
+            sentiment: json.assistant.sentiment || "neutral",
+            sources: json.assistant.sources || []
+          }
+        };
+      } else if (agentId === 'travel' || agentId === 'email' || agentId === 'interview') {
+        // ✅ For other agents, just use the response as-is
+        assistantMsg = {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          content: typeof json.assistant === 'string'
+            ? json.assistant
+            : json.assistant?.summary || "No response",
+          createdAt: Date.now()
+        };
+      } else {
+        assistantMsg = {
+          id: `a-${Date.now()}`,
+          role: "assistant",
+          content: json.assistant || "No response",
+          createdAt: Date.now()
+        };
+      }
+
       setMessages((s) => {
         const next = [...s, assistantMsg];
         messagesRef.current = next;
@@ -154,6 +190,98 @@ export default function ChatPage() {
     // simple reload: clear conversation (you may prefer to refetch)
     setMessages([]);
     toast.success('Conversation cleared');
+  };
+
+  // ✅ Render news messages with sentiment and sources
+  const renderNewsMessage = (msg: ChatMsg) => {
+    const sentiment = msg.metadata?.sentiment || "neutral";
+    const sources = msg.metadata?.sources || [];
+
+    const sentimentColors: Record<string, string> = {
+      positive: 'bg-green-100 text-green-800',
+      negative: 'bg-red-100 text-red-800',
+      neutral: 'bg-slate-100 text-slate-800'
+    };
+
+    return (
+
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
+        <div className="p-6">
+          {/* Header with sentiment */}
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <h3 className="font-bold text-lg text-slate-900">News Summary</h3>
+              <Badge className={`mt-2 ${sentimentColors[sentiment]}`}>
+                {sentiment.toUpperCase()} Sentiment
+              </Badge>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(msg.content)}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Summary text */}
+          <div className="mb-6">
+            <p className="text-slate-700 leading-relaxed text-base">{msg.content}</p>
+          </div>
+
+          {/* Sources section */}
+          {sources && sources.length > 0 && (
+            <div className="border-t border-slate-200 pt-4">
+              <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <span>📚</span> Sources
+              </h4>
+              <div className="space-y-2">
+                {sources.map((source: NewsSource, idx: number) => (
+                  <a
+                    key={idx}
+                    href={source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block p-3 bg-slate-50 hover:bg-indigo-50 rounded-lg border border-slate-200 hover:border-indigo-300 transition-all"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="text-lg shrink-0">🔗</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2">
+                          {source.title}
+                        </p>
+                        <p className="text-xs text-slate-500 truncate mt-1">
+                          {source.source}
+                        </p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-colors shrink-0 mt-0.5" />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </Card>
+
+    );
+  };
+
+  // ✅ Render default messages for other agents
+  const renderDefaultMessage = (msg: ChatMsg) => {
+    return (
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
+        <div className="p-6">
+          <div className="space-y-3">
+            {msg.content.split('\n').map((line, i) => {
+              const trimmed = line.trim();
+              if (!trimmed) return null;
+              return (
+                <p key={`${msg.id}-p-${i}`} className="text-slate-700 text-base">
+                  {trimmed.replace(/\*\*(.*?)\*\*/g, '$1')}
+                </p>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+    );
   };
 
   return (
@@ -261,47 +389,24 @@ export default function ChatPage() {
                     key={msg.id ?? idx}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex gap-4 mb-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {msg.role === 'assistant' && (
-                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl">
-                        <AvatarFallback className={`bg-linear-to-br ${config.gradient} text-white font-bold text-lg`}>{config.icon}</AvatarFallback>
+                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl shrink-0">
+                        <AvatarFallback className={`bg-linear-to-br ${config.gradient} text-white font-bold text-lg`}>
+                          {config.icon}
+                        </AvatarFallback>
                       </Avatar>
                     )}
 
                     <div className={`max-w-2xl space-y-3 ${msg.role === 'user' ? 'text-right' : ''}`}>
                       {msg.role === 'assistant' ? (
-                        <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
-                          <div className="p-6">
-                            <div className="prose prose-lg max-w-none">
-                              {msg.content.split('\n').map((line, i) => {
-                                const trimmed = line.trim();
-                                const bulletMatch = trimmed.match(/^•\s*\*\*(.+?)\*\*\s*–\s*(.+?)(?:→\s*(.*))?$/);
-                                if (bulletMatch) {
-                                  const headline = bulletMatch[1].trim();
-                                  const source = bulletMatch[2].trim();
-                                  const summary = (bulletMatch[3] ?? '').trim();
-                                  return (
-                                    <div key={`${msg.id}-b-${i}`} className="mb-6 p-5 bg-linear-to-r from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
-                                      <div className="flex items-start justify-between">
-                                        <h4 className="font-bold text-lg text-slate-900">{headline}</h4>
-                                        <Button size="sm" variant="ghost" onClick={() => copyToClipboard(`${headline} – ${source}`)}>
-                                          <Copy className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                      <p className="text-sm text-slate-600 mt-2">{source}</p>
-                                      {summary && <p className="text-slate-700 mt-3 font-medium">{summary}</p>}
-                                    </div>
-                                  );
-                                }
-                                return (
-                                  <p key={`${msg.id}-p-${i}`} className="text-slate-700">{trimmed.replace(/\*\*(.*?)\*\*/g, '$1')}</p>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </Card>
+                        // ✅ Use appropriate renderer based on agent type
+                        agentId === 'news' && msg.metadata?.sentiment
+                          ? renderNewsMessage(msg)
+                          : renderDefaultMessage(msg)
                       ) : (
+                        // User message
                         <div className="inline-block">
                           <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-3xl px-6 py-4 shadow-xl">
                             <p className="text-lg font-medium">{msg.content}</p>
@@ -314,8 +419,10 @@ export default function ChatPage() {
                     </div>
 
                     {msg.role === 'user' && (
-                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl">
-                        <AvatarFallback className="bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold">A</AvatarFallback>
+                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl shrink-0">
+                        <AvatarFallback className="bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold">
+                          A
+                        </AvatarFallback>
                       </Avatar>
                     )}
                   </motion.div>

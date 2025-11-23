@@ -77,7 +77,7 @@ export default function HomePage() {
 
   return (
 
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50 overflow-hidden antialiased">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50 overflow-hidden">
 
       {/* Navbar - Professional Top Bar */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50 px-4">
@@ -87,7 +87,7 @@ export default function HomePage() {
           </Link>
           <div className="flex items-center space-x-4">
             <Button variant="ghost" asChild>
-              <Link href="/demo">Watch Demo</Link>
+              <Link href="/dashboard">Watch Demo</Link>
             </Button>
             {isUserSignedIn ? (
               // <UserButton afterSignOutUrl="/" />
@@ -96,7 +96,7 @@ export default function HomePage() {
               </Button>
             ) : (
               <Button variant="secondary" size="sm" asChild>
-                <Link href="/sign-in">
+                <Link href="/auth/signin">
                   <LogIn /> Sign In
                 </Link>
               </Button>
