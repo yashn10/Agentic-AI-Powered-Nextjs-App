@@ -12,19 +12,10 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Toaster, toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  Send,
-  Paperclip,
-  Mic,
-  Copy,
-  RefreshCw,
-  Sparkles,
-  ArrowLeft,
-  Settings,
-  ExternalLink,
-} from 'lucide-react';
+import { Send, Paperclip, Mic, Copy, RefreshCw, Sparkles, ArrowLeft, Settings, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+
 
 const agentConfig: Record<string, any> = {
   email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500' },
@@ -88,6 +79,38 @@ export default function ChatPage() {
     }
   };
 
+  function parseInterviewResponse(content: string) {
+    try {
+      // Try to extract JSON array from response
+      const jsonMatch = content.match(/\[\s*\{[\s\S]*?\}\s*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (Array.isArray(parsed)) {
+          return {
+            type: "questions",
+            data: parsed,
+            text: content.replace(jsonMatch[0], "").trim(),
+          };
+        }
+      }
+
+      // Try to extract JSON object (for plans)
+      const objMatch = content.match(/\{\s*"[^"]*"[\s\S]*?\n\}/);
+      if (objMatch) {
+        const parsed = JSON.parse(objMatch[0]);
+        return {
+          type: "plan",
+          data: parsed,
+          text: content.replace(objMatch[0], "").trim(),
+        };
+      }
+
+      return { type: "text", data: content, text: content };
+    } catch (e) {
+      return { type: "text", data: content, text: content };
+    }
+  }
+
   // send user message -> call API -> append assistant response
   const sendMessage = async (text: string) => {
     if (!text || !text.trim()) return;
@@ -146,21 +169,19 @@ export default function ChatPage() {
             sources: json.assistant.sources || []
           }
         };
-      } else if (agentId === 'travel' || agentId === 'email' || agentId === 'interview') {
-        // ✅ For other agents, just use the response as-is
+      } else if (agentId === 'interview') {
+        // IMPORTANT: keep full raw assistant string for parsing/rendering
         assistantMsg = {
           id: `a-${Date.now()}`,
           role: "assistant",
-          content: typeof json.assistant === 'string'
-            ? json.assistant
-            : json.assistant?.summary || "No response",
-          createdAt: Date.now()
+          content: typeof json.assistant === 'string' ? json.assistant : (json.assistant?.summary || ""),
+          createdAt: Date.now(),
         };
       } else {
         assistantMsg = {
           id: `a-${Date.now()}`,
           role: "assistant",
-          content: json.assistant || "No response",
+          content: typeof json.assistant === 'string' ? json.assistant : (json.assistant?.summary || "No response"),
           createdAt: Date.now()
         };
       }
@@ -284,6 +305,61 @@ export default function ChatPage() {
     );
   };
 
+  // ✅ Add a render function for interview JSON outputs
+  function renderInterviewMessage(msg: ChatMsg) {
+    const parsed = parseInterviewResponse(msg.content);
+
+    return (
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
+        <div className="p-6">
+          {parsed.text ? <p className="text-slate-700 mb-4">{parsed.text}</p> : null}
+
+          {parsed.type === "questions" && Array.isArray(parsed.data) && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-900 mb-3">Practice Questions</h3>
+              {parsed.data.map((q: any, idx: number) => (
+                <div key={idx} className="p-4 bg-linear-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <p className="font-medium text-slate-900 mb-2">Q{idx + 1}. {q.question}</p>
+                  <p className="text-sm text-slate-700"><strong>Suggested Answer:</strong> {q.suggested_answer}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {parsed.type === "plan" && parsed.data && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-900 mb-3">{parsed.data.title || "Study Plan"}</h3>
+              {Array.isArray(parsed.data.days) && parsed.data.days.map((day: any, idx: number) => (
+                <div key={idx} className="p-4 bg-linear-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                  <p className="font-medium text-slate-900">Day {day.day}: {day.topic}</p>
+                  {Array.isArray(day.tasks) && (
+                    <ul className="text-sm text-slate-700 mt-2 space-y-1">
+                      {day.tasks.map((task: string, t: number) => <li key={t}>• {task}</li>)}
+                    </ul>
+                  )}
+                  {day.practice && <p className="text-sm text-slate-700 mt-2"><strong>Practice:</strong> {day.practice}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* fallback - raw text */}
+          {parsed.type === "text" && (
+            <div className="prose prose-lg max-w-none">
+              {parsed.data.split('\n').map((line: string, i: number) => <p key={i} className="text-slate-700">{line}</p>)}
+            </div>
+          )}
+
+          <div className="mt-4">
+            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(msg.content)}>
+              <Copy className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
 
     <div className="flex h-screen bg-linear-to-br from-slate-50 via-white to-slate-50">
@@ -401,10 +477,13 @@ export default function ChatPage() {
 
                     <div className={`max-w-2xl space-y-3 ${msg.role === 'user' ? 'text-right' : ''}`}>
                       {msg.role === 'assistant' ? (
-                        // ✅ Use appropriate renderer based on agent type
-                        agentId === 'news' && msg.metadata?.sentiment
-                          ? renderNewsMessage(msg)
-                          : renderDefaultMessage(msg)
+                        agentId === 'news' && msg.metadata?.sentiment ? (
+                          renderNewsMessage(msg)
+                        ) : agentId === 'interview' ? (
+                          renderInterviewMessage(msg)
+                        ) : (
+                          renderDefaultMessage(msg)
+                        )
                       ) : (
                         // User message
                         <div className="inline-block">

@@ -54,7 +54,7 @@ export const readEmailsTool = tool(
                         from,
                         subject,
                         snippet,
-                        timestamp: fullMsg.data.internalDateMs,
+                        timestamp: fullMsg.data.internalDate,
                     };
                 })
             );
