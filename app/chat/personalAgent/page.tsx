@@ -14,10 +14,10 @@ import { Plus, Edit, Trash2, ArrowLeft, Sparkles, Bot, Code, Mail, Check, Calend
 import Link from 'next/link';
 
 const tools = [
-    { id: 'email', name: 'Email Integration', icon: Mail },
-    { id: 'web-search', name: 'Web Search', icon: Search },
-    { id: 'calendar', name: 'Calendar', icon: Calendar },
-    { id: 'code', name: 'Code Execution', icon: Code },
+    { id: 'email', name: 'Email Integration', icon: Mail, color: 'indigo' },
+    { id: 'web-search', name: 'Web Search', icon: Search, color: 'emerald' },
+    { id: 'calendar', name: 'Calendar', icon: Calendar, color: 'amber' },
+    { id: 'code', name: 'Code Execution', icon: Code, color: 'rose' },
 ];
 
 const createdAgents = [
@@ -58,101 +58,103 @@ export default function CreateAgentPage() {
 
     return (
 
-        <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100">
+        <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-indigo-50 antialiased">
 
-            {/* Header */}
-            <header className="bg-white shadow-sm border-b border-slate-200">
+            {/* Header - Clean and Modern */}
+            <header className="bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
+                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors font-medium">
                         <ArrowLeft className="h-5 w-5" />
                         Back to Dashboard
                     </Link>
-                    <h1 className="text-2xl font-bold text-slate-900">Create Personal Agent</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Create Personal Agent</h1>
                     <div className="w-24" /> {/* Spacer */}
                 </div>
             </header>
 
+
             <div className="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Create Form */}
+
+                {/* Create Form - Enhanced with Steps and Animations */}
                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="lg:col-span-2 space-y-6"
                 >
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-xl font-semibold text-slate-900 flex items-center gap-2">
-                                <Sparkles className="h-5 w-5 text-indigo-600" />
+                    <Card className="border border-gray-100 shadow-xl bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
+                        <CardHeader className="pb-4 border-b border-gray-100">
+                            <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2 tracking-tight">
+                                <Sparkles className="h-6 w-6 text-indigo-600" />
                                 Build Your Agent
                             </CardTitle>
-                            <CardDescription className="text-slate-600">Customize your AI companion with tools and prompts.</CardDescription>
+                            <CardDescription className="text-gray-600 font-medium">Customize your AI companion with tools and prompts.</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleCreate} className="space-y-6">
-                                <div className="space-y-2">
-                                    {/* <Label htmlFor="name" className="text-sm font-medium text-slate-700">Agent Name</Label> */}
-                                    <label htmlFor="name" className="text-sm font-medium text-slate-700">Agent Name</label>
+                        <CardContent className="p-6">
+                            <form onSubmit={handleCreate} className="space-y-8">
+                                <div className="space-y-3">
+                                    <label htmlFor="name" className="text-sm font-semibold text-gray-700">Agent Name</label>
                                     <Input
                                         id="name"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="e.g., My Daily Assistant"
-                                        className="h-12 rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500/20"
+                                        className="h-12 rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/30 transition-all"
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    {/* <Label htmlFor="description" className="text-sm font-medium text-slate-700">Description</Label> */}
-                                    <label htmlFor="description" className="text-sm font-medium text-slate-700">Description</label>
+                                <div className="space-y-3">
+                                    <label htmlFor="description" className="text-sm font-semibold text-gray-700">Description</label>
                                     <Textarea
                                         id="description"
                                         value={description}
                                         onChange={(e: any) => setDescription(e.target.value)}
                                         placeholder="What does this agent do?"
-                                        className="min-h-[100px] rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500/20"
+                                        className="min-h-[100px] rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/30 transition-all"
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    {/* <Label className="text-sm font-medium text-slate-700">Tools</Label> */}
-                                    <label className="text-sm font-medium text-slate-700">Tools</label>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="space-y-3">
+                                    <label className="text-sm font-semibold text-gray-700">Tools</label>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {tools.map((tool) => (
                                             <motion.div
                                                 key={tool.id}
-                                                whileHover={{ scale: 1.02 }}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
                                                 className="relative"
                                             >
                                                 <Button
                                                     type="button"
                                                     variant={selectedTools.includes(tool.id) ? 'default' : 'outline'}
-                                                    className={`h-16 w-full rounded-xl flex flex-col gap-2 ${selectedTools.includes(tool.id) ? 'bg-indigo-500 text-white shadow-md' : 'border-slate-300 hover:border-indigo-400'}`}
+                                                    className={`h-20 w-full rounded-2xl flex flex-col gap-2 items-center justify-center transition-all duration-300 ${selectedTools.includes(tool.id)
+                                                        ? `bg-${tool.color}-500 text-white shadow-md hover:bg-${tool.color}-600`
+                                                        : `border-gray-200 hover:border-${tool.color}-400 hover:text-${tool.color}-600`}`}
                                                     onClick={() => handleToolToggle(tool.id)}
                                                 >
-                                                    <tool.icon className="h-5 w-5" />
-                                                    <span className="text-xs font-medium">{tool.name}</span>
+                                                    <tool.icon className="h-6 w-6" />
+                                                    <span className="text-sm font-medium">{tool.name}</span>
                                                 </Button>
                                                 {selectedTools.includes(tool.id) && (
-                                                    <Check className="absolute -top-1 -right-1 h-4 w-4 text-white bg-indigo-600 rounded-full" />
+                                                    <Check className="absolute -top-2 -right-2 h-5 w-5 text-white bg-indigo-600 rounded-full p-0.5 shadow" />
                                                 )}
                                             </motion.div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div className="space-y-2">
-                                    {/* <Label htmlFor="prompt" className="text-sm font-medium text-slate-700">System Prompt</Label> */}
-                                    <label htmlFor="prompt" className="text-sm font-medium text-slate-700">System Prompt</label>
+                                <div className="space-y-3">
+                                    <label htmlFor="prompt" className="text-sm font-semibold text-gray-700">System Prompt</label>
                                     <Textarea
                                         id="prompt"
                                         value={systemPrompt}
                                         onChange={(e: any) => setSystemPrompt(e.target.value)}
                                         placeholder="e.g., You are a helpful assistant that..."
-                                        className="min-h-[120px] rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500/20"
+                                        className="min-h-[140px] rounded-xl border-gray-200 focus:border-indigo-500 focus:ring-indigo-500/30 transition-all"
                                     />
                                 </div>
 
-                                <Button type="submit" className="w-full h-12 rounded-xl bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all">
+                                <Button type="submit" className="w-full h-12 rounded-xl bg-linear-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300">
                                     <Plus className="mr-2 h-5 w-5" />
                                     Create Agent
                                 </Button>
@@ -161,60 +163,61 @@ export default function CreateAgentPage() {
                     </Card>
                 </motion.div>
 
-                {/* History */}
+                {/* History - Stunning Card List with Hover Effects */}
                 <motion.div
-                    initial={{ opacity: 0, x: 20 }}
+                    initial={{ opacity: 0, x: 50 }}
                     animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
                     className="space-y-6"
                 >
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-slate-900">Your Created Agents</h2>
-                        <Badge variant="outline" className="text-xs">5 total</Badge>
+                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Your Created Agents</h2>
+                        <Badge variant="outline" className="text-xs font-semibold border-gray-200">{createdAgents.length} total</Badge>
                     </div>
 
                     <AnimatePresence>
                         {createdAgents.map((agent, i) => (
                             <motion.div
                                 key={agent.id}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
-                                whileHover={{ y: -4 }}
+                                transition={{ delay: i * 0.1, duration: 0.5 }}
+                                whileHover={{ y: -6, scale: 1.02 }}
                                 className="group"
                             >
-                                <Card className="border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+                                <Card className="border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
                                     <CardHeader className="pb-3">
                                         <div className="flex items-start justify-between">
-                                            <Avatar className="h-10 w-10">
+                                            <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20">
                                                 <AvatarFallback className="bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold">
-                                                    B
+                                                    {agent.name.charAt(0)}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            <div className="flex-1 ml-3">
-                                                <CardTitle className="text-base font-semibold text-slate-900">{agent.name}</CardTitle>
-                                                <CardDescription className="text-sm text-slate-600">{agent.description}</CardDescription>
+                                            <div className="flex-1 ml-4">
+                                                <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">{agent.name}</CardTitle>
+                                                <CardDescription className="text-sm text-gray-600 font-medium leading-relaxed">{agent.description}</CardDescription>
                                             </div>
-                                            <Badge variant={agent.status === 'active' ? 'default' : 'secondary'}>
-                                                {agent.status}
+                                            <Badge variant={agent.status === 'active' ? 'default' : 'secondary'} className={`${agent.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'} font-medium`}>
+                                                {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
                                             </Badge>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="pt-0">
-                                        <div className="flex flex-wrap gap-1 mb-4">
+                                    <CardContent className="pt-0 px-6 pb-6">
+                                        <div className="flex flex-wrap gap-2 mb-4">
                                             {agent.tools.map((tool, j) => (
-                                                <Badge key={j} variant="outline" className="text-xs capitalize">
-                                                    {tool}
+                                                <Badge key={j} variant="outline" className="text-xs font-medium capitalize border-gray-200 text-gray-700">
+                                                    {tool.replace('-', ' ')}
                                                 </Badge>
                                             ))}
                                         </div>
-                                        <div className="flex items-center justify-between text-xs text-slate-500">
+                                        <div className="flex items-center justify-between text-xs text-gray-500 font-medium">
                                             <span>Created {agent.created}</span>
-                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Button variant="ghost" size="sm" className="h-6 px-2">
-                                                    <Edit className="h-3 w-3" />
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                <Button variant="ghost" size="sm" className="h-8 px-3 hover:bg-gray-100">
+                                                    <Edit className="h-4 w-4 text-gray-600" />
                                                 </Button>
-                                                <Button variant="ghost" size="sm" className="h-6 px-2 text-red-600 hover:text-red-700">
-                                                    <Trash2 className="h-3 w-3" />
+                                                <Button variant="ghost" size="sm" className="h-8 px-3 text-red-600 hover:bg-red-50 hover:text-red-700">
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </div>
@@ -225,16 +228,17 @@ export default function CreateAgentPage() {
                     </AnimatePresence>
 
                     {createdAgents.length === 0 && (
-                        <Card className="border-slate-200 text-center py-12">
-                            <Bot className="mx-auto h-12 w-12 text-slate-400 mb-4" />
-                            <h3 className="text-lg font-semibold text-slate-900 mb-2">No agents created yet</h3>
-                            <p className="text-sm text-slate-600 mb-6">Start by building your first personal agent above.</p>
-                            <Button className="bg-linear-to-r from-indigo-600 to-purple-600 text-white">
+                        <Card className="border border-gray-100 shadow-lg bg-white/80 backdrop-blur-xl rounded-3xl text-center py-16">
+                            <Bot className="mx-auto h-16 w-16 text-gray-400 mb-4" />
+                            <h3 className="text-xl font-extrabold text-gray-900 mb-2 tracking-tight">No agents created yet</h3>
+                            <p className="text-sm text-gray-600 mb-6 font-medium">Start by building your first personal agent above.</p>
+                            <Button className="bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-lg">
                                 Create Your First Agent
                             </Button>
                         </Card>
                     )}
                 </motion.div>
+
             </div>
 
         </div>
