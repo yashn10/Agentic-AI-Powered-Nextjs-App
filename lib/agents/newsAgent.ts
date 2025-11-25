@@ -5,7 +5,7 @@ import { searchTavilyNews } from "@/app/api/tools/news";
 
 
 const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
+    model: process.env.GROQ_MODEL_2,
     temperature: 0.2,
     maxTokens: 1000,
 });

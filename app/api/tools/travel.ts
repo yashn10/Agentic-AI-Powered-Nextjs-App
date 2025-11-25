@@ -3,6 +3,7 @@ import axios from "axios";
 import { tool } from "langchain";
 import * as z from "zod";
 import qs from "qs";
+import { parseUserDate } from "@/lib/utils/dateUtils";
 
 // Get Amadeus API Token (with caching)
 let amadeusTokenCache: { token: string; expiresAt: number } | null = null;
@@ -30,8 +31,6 @@ async function getAmadeusToken() {
             }
         );
 
-        console.log("[Amadeus] Token obtained successfully");
-
         amadeusTokenCache = {
             token: response.data.access_token,
             expiresAt: Date.now() + response.data.expires_in * 1000,
@@ -52,71 +51,88 @@ async function getAmadeusToken() {
 
 export const searchFlightsTool = tool(
     async (input: any) => {
-        try {
-            const token = await getAmadeusToken();
+        const token = await getAmadeusToken();
 
-            const response = await axios.get(
-                "https://test.api.amadeus.com/v2/shopping/flight-offers",
-                {
-                    params: {
-                        originLocationCode: input.from.toUpperCase(),
-                        destinationLocationCode: input.to.toUpperCase(),
-                        departureDate: input.date,
-                        adults: input.adults || 1,
-                        nonStop: input.nonStop === true ? "true" : "false",
-                        max: 5,
-                    },
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+        // ✅ PARSE THE DATE
+        const parsedDate = parseUserDate(input.date);
 
-            if (!response.data.data || response.data.data.length === 0) {
-                return JSON.stringify({
-                    flights: [],
-                    message: "No flights found for the selected dates",
-                });
-            }
+        console.log("[searchFlights] Input params:", JSON.stringify(input, null, 2));
+        console.log("[searchFlights] Original date:", input.date);
+        console.log("[searchFlights] Parsed date:", parsedDate);
 
-            const flights = response.data.data.map((flight: any) => ({
-                id: flight.id,
-                price: {
-                    total: flight.price.total,
-                    currency: flight.price.currency,
+        console.log("[searchFlights] Input params:", JSON.stringify(input, null, 2));
+
+        // ✅ Don't catch here - let errors bubble to middleware
+        const response = await axios.get(
+            "https://test.api.amadeus.com/v2/shopping/flight-offers",
+            {
+                params: {
+                    originLocationCode: input.from.toUpperCase(),
+                    destinationLocationCode: input.to.toUpperCase(),
+                    departureDate: parsedDate,
+                    adults: input.adults || 1,
+                    nonStop: input.nonStop === true ? "true" : "false",
+                    max: 5,
                 },
-                duration: flight.itineraries[0].duration,
-                segments: flight.itineraries[0].segments.map((seg: any) => ({
-                    departure: seg.departure.at,
-                    arrival: seg.arrival.at,
-                    airline: seg.operating?.carrierCode || seg.carrierCode,
-                    flightNumber: seg.number,
-                    aircraft: seg.aircraft?.code || "Unknown",
-                })),
-                validatingAirlineCodes: flight.validatingAirlineCodes,
-            }));
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
 
-            return JSON.stringify({
-                flights: flights.slice(0, 5),
-                count: flights.length,
-            });
-        } catch (err: any) {
-            console.error("Search flights error:", err);
-            return JSON.stringify({
-                error: `Failed to search flights: ${err.message}`,
+        console.log(
+            "[searchFlights] Success:",
+            response.data.data?.length,
+            "flights found"
+        );
+
+        if (!response.data.data || response.data.data.length === 0) {
+            return {
                 flights: [],
-            });
+                message: "No flights found for the selected dates",
+            };
         }
+
+        const flights = response.data.data.map((flight: any) => ({
+            id: flight.id,
+            price: {
+                total: flight.price.total,
+                currency: flight.price.currency,
+            },
+            duration: flight.itineraries[0].duration,
+            segments: flight.itineraries[0].segments.map((seg: any) => ({
+                departure: seg.departure.at,
+                arrival: seg.arrival.at,
+                airline: seg.operating?.carrierCode || seg.carrierCode,
+                flightNumber: seg.number,
+                aircraft: seg.aircraft?.code || "Unknown",
+            })),
+            validatingAirlineCodes: flight.validatingAirlineCodes,
+        }));
+
+        return {
+            flights: flights.slice(0, 5),
+            count: flights.length,
+        };
+        // ✅ No try/catch here - errors propagate to middleware
     },
     {
         name: "search_flights",
-        description: "Search for flights between two airports",
+        description:
+            "Search for available flights between airports. Requires airport codes (JFK, LAX, CDG, etc.), not city names. Auto-parses dates like '10 december' to YYYY-MM-DD format and adjusts year if in past.",
         schema: z.object({
-            from: z.string().describe("Departure airport code (e.g., JFK, LAX)"),
-            to: z.string().describe("Destination airport code (e.g., LHR, CDG)"),
-            date: z.string().describe("Departure date (YYYY-MM-DD)"),
+            from: z
+                .string()
+                .describe("Departure airport IATA code (JFK, LAX, CDG, etc.)"),
+            to: z
+                .string()
+                .describe("Destination airport IATA code (JFK, LAX, CDG, etc.)"),
+            date: z.string().describe("Departure date (YYYY-MM-DD format)"),
             adults: z.number().optional().describe("Number of adults (default: 1)"),
-            nonStop: z.boolean().optional().describe("Non-stop flights only"),
+            nonStop: z
+                .boolean()
+                .optional()
+                .describe("Non-stop flights only"),
         }),
     }
 );
@@ -124,70 +140,86 @@ export const searchFlightsTool = tool(
 
 export const searchHotelsTool = tool(
     async (input: any) => {
-        try {
-            const token = await getAmadeusToken();
+        const token = await getAmadeusToken();
 
-            const response = await axios.get(
-                "https://test.api.amadeus.com/v3/shopping/hotel-offers",
-                {
-                    params: {
-                        cityCode: input.cityCode.toUpperCase(),
-                        checkInDate: input.checkIn,
-                        checkOutDate: input.checkOut,
-                        adults: input.adults || 1,
-                        limit: 10,
-                    },
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
+        // ✅ PARSE BOTH DATES
+        const checkInDate = parseUserDate(input.checkIn);
+        const checkOutDate = parseUserDate(input.checkOut);
 
-            if (!response.data.data || response.data.data.length === 0) {
-                return JSON.stringify({
-                    hotels: [],
-                    message: "No hotels found for the selected dates",
-                });
-            }
+        console.log("[searchHotels] Input params:", JSON.stringify(input, null, 2));
+        console.log("[searchHotels] Parsed dates:", {
+            checkIn: checkInDate,
+            checkOut: checkOutDate,
+        });
 
-            const hotels = response.data.data.map((hotel: any) => ({
-                id: hotel.id,
-                name: hotel.name,
-                rating: hotel.rating || "Not rated",
-                address: {
-                    cityName: hotel.address?.cityName || "",
-                    countryCode: hotel.address?.countryCode || "",
+        console.log("[searchHotels] Input params:", JSON.stringify(input, null, 2));
+
+        const response = await axios.get(
+            "https://test.api.amadeus.com/v3/shopping/hotel-offers",
+            {
+                params: {
+                    cityCode: input.cityCode.toUpperCase(),
+                    checkInDate: checkInDate,
+                    checkOutDate: checkOutDate,
+                    adults: input.adults || 1,
+                    limit: 10,
                 },
-                offers: hotel.offers.map((offer: any) => ({
-                    price: {
-                        total: offer.price.total,
-                        currency: offer.price.currency,
-                    },
-                    checkInDate: offer.checkInDate,
-                    checkOutDate: offer.checkOutDate,
-                    policies: {
-                        cancellation: offer.policies?.cancellation?.type || "Unknown",
-                    },
-                })),
-            }));
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
 
-            return JSON.stringify({
-                hotels: hotels.slice(0, 10),
-                count: hotels.length,
-            });
-        } catch (err: any) {
-            console.error("Search hotels error:", err);
-            return JSON.stringify({
-                error: `Failed to search hotels: ${err.message}`,
+        console.log(
+            "[searchHotels] Success:",
+            response.data.data?.length,
+            "hotels found"
+        );
+
+        if (!response.data.data || response.data.data.length === 0) {
+            return {
                 hotels: [],
-            });
+                message: "No hotels found for the selected dates",
+            };
         }
+
+        const hotels = response.data.data.map((hotel: any) => ({
+            id: hotel.id,
+            name: hotel.name,
+            rating: hotel.rating || "Not rated",
+            address: {
+                cityName: hotel.address?.cityName || "",
+                countryCode: hotel.address?.countryCode || "",
+            },
+            offers: hotel.offers.map((offer: any) => ({
+                price: {
+                    total: offer.price.total,
+                    currency: offer.price.currency,
+                },
+                checkInDate: offer.checkInDate,
+                checkOutDate: offer.checkOutDate,
+                policies: {
+                    cancellation: offer.policies?.cancellation?.type || "Unknown",
+                },
+            })),
+        }));
+
+        return {
+            hotels: hotels.slice(0, 10),
+            count: hotels.length,
+        };
+        // ✅ No try/catch here - errors propagate to middleware
     },
     {
         name: "search_hotels",
-        description: "Search for hotels in a city",
+        description:
+            "Search for hotels in a city. Requires city codes (DEL for Delhi, BOM for Mumbai, NYC for New York). Auto-parses dates like '10 december' to YYYY-MM-DD format.",
         schema: z.object({
-            cityCode: z.string().describe("City code (e.g., NYC, LON, PAR)"),
+            cityCode: z
+                .string()
+                .describe(
+                    "City code (DEL for Delhi, BOM for Mumbai, NYC for New York, LON for London, PAR for Paris)"
+                ),
             checkIn: z.string().describe("Check-in date (YYYY-MM-DD)"),
             checkOut: z.string().describe("Check-out date (YYYY-MM-DD)"),
             adults: z.number().optional().describe("Number of adults"),

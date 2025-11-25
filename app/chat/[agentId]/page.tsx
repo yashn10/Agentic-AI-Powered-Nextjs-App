@@ -469,8 +469,8 @@ export default function ChatPage() {
                     className={`flex gap-4 mb-6 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     {msg.role === 'assistant' && (
-                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl shrink-0">
-                        <AvatarFallback className={`bg-linear-to-br ${config.gradient} text-white font-bold text-lg`}>
+                      <Avatar className="h-8 w-8 ring-4 ring-white shadow-xl shrink-0">
+                        <AvatarFallback className={`bg-linear-to-br ${config.gradient} text-white font-bold text-md`}>
                           {config.icon}
                         </AvatarFallback>
                       </Avatar>
@@ -488,8 +488,8 @@ export default function ChatPage() {
                       ) : (
                         // User message
                         <div className="inline-block">
-                          <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-3xl px-6 py-4 shadow-xl">
-                            <p className="text-lg font-medium">{msg.content}</p>
+                          <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl px-6 py-3 shadow-xl">
+                            <p className="text-md font-medium">{msg.content}</p>
                           </div>
                           <p className="text-xs text-slate-500 mt-2">
                             {new Date(msg.createdAt ?? Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -499,7 +499,7 @@ export default function ChatPage() {
                     </div>
 
                     {msg.role === 'user' && (
-                      <Avatar className="h-11 w-11 ring-4 ring-white shadow-xl shrink-0">
+                      <Avatar className="h-8 w-8 ring-4 ring-white shadow-xl shrink-0">
                         <AvatarFallback className="bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold">
                           A
                         </AvatarFallback>
