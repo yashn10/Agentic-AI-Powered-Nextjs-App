@@ -18,10 +18,11 @@ import { useParams, useRouter } from 'next/navigation';
 
 
 const agentConfig: Record<string, any> = {
-  email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500' },
-  travel: { name: 'Live Travel Orchestrator', icon: '✈️', gradient: 'from-emerald-400 to-teal-500' },
-  news: { name: 'Intelligent News Curator', icon: '📰', gradient: 'from-amber-400 to-orange-500' },
-  interview: { name: 'Live Interview Coach', icon: '🎙️', gradient: 'from-rose-400 to-pink-500' },
+  email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500', description: 'Helps you draft, organize, and manage your emails efficiently.' },
+  travel: { name: 'Live Travel Orchestrator', icon: '✈️', gradient: 'from-emerald-400 to-teal-500', description: 'Assists in planning trips, booking flights, and finding accommodations.' },
+  news: { name: 'Intelligent News Curator', icon: '📰', gradient: 'from-amber-400 to-orange-500', description: 'Summarizes news articles and provides sentiment analysis.' },
+  interview: { name: 'Live Interview Coach', icon: '🎙️', gradient: 'from-rose-400 to-pink-500', description: 'Prepares you for interviews with practice questions and feedback.' },
+  personalAgent: { name: 'Personal AI Agent', icon: '🤖', gradient: 'from-green-400 to-lime-500', description: 'Creates a customized AI agent tailored to your personal needs.' },
 };
 
 type NewsSource = {
@@ -455,7 +456,7 @@ export default function ChatPage() {
                   <h2 className="text-3xl font-black text-slate-900 mb-3">
                     Hey! I'm your <span className={`bg-linear-to-r ${config.gradient} bg-clip-text text-transparent`}>{config.name}</span>
                   </h2>
-                  <p className="text-lg text-slate-600">Ask me anything — I’m ready to help.</p>
+                  <p className="text-lg text-slate-600">{config.description}</p>
                 </motion.div>
               )}
 
