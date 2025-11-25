@@ -227,17 +227,17 @@ export default function ChatPage() {
 
     return (
 
-      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
-        <div className="p-6">
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
+        <div className="px-6">
           {/* Header with sentiment */}
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="font-bold text-lg text-slate-900">News Summary</h3>
+              <h3 className="font-semibold text-lg text-slate-900">News Summary</h3>
               <Badge className={`mt-2 ${sentimentColors[sentiment]}`}>
                 {sentiment.toUpperCase()} Sentiment
               </Badge>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(msg.content)}>
+            <Button size="sm" variant="ghost" className='cursor-pointer' onClick={() => copyToClipboard(msg.content)}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
@@ -288,8 +288,8 @@ export default function ChatPage() {
   // ✅ Render default messages for other agents
   const renderDefaultMessage = (msg: ChatMsg) => {
     return (
-      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
-        <div className="p-6">
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
+        <div className="px-6">
           <div className="space-y-3">
             {msg.content.split('\n').map((line, i) => {
               const trimmed = line.trim();
@@ -311,8 +311,8 @@ export default function ChatPage() {
     const parsed = parseInterviewResponse(msg.content);
 
     return (
-      <Card className="bg-white/90 backdrop-blur border-0 shadow-xl overflow-hidden">
-        <div className="p-6">
+      <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
+        <div className="px-6">
           {parsed.text ? <p className="text-slate-700 mb-4">{parsed.text}</p> : null}
 
           {parsed.type === "questions" && Array.isArray(parsed.data) && (
@@ -352,7 +352,7 @@ export default function ChatPage() {
           )}
 
           <div className="mt-4">
-            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(msg.content)}>
+            <Button size="sm" variant="ghost" className='cursor-pointer' onClick={() => copyToClipboard(msg.content)}>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
@@ -488,7 +488,7 @@ export default function ChatPage() {
                       ) : (
                         // User message
                         <div className="inline-block">
-                          <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl px-6 py-3 shadow-xl">
+                          <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-md px-6 py-3 shadow-xl">
                             <p className="text-md font-medium">{msg.content}</p>
                           </div>
                           <p className="text-xs text-slate-500 mt-2">
@@ -576,7 +576,7 @@ export default function ChatPage() {
 
       </div>
 
-      <Toaster position="top-center" richColors closeButton />
+      <Toaster position="top-right" richColors closeButton />
 
     </div>
 
