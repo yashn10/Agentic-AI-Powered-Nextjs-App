@@ -33,7 +33,7 @@ const itemVariants: Variants = {
 };
 
 const cardVariants: Variants = {
-  hidden: { scale: 0.9, opacity: 0, rotateX: 10 },
+  hidden: { scale: 0.95, opacity: 0, rotateX: 5 },
   visible: {
     scale: 1,
     opacity: 1,
@@ -41,9 +41,9 @@ const cardVariants: Variants = {
     transition: { duration: 0.6, ease: 'easeOut' },
   },
   hover: {
-    scale: 1.02,
-    y: -5,
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)',
+    scale: 1.03,
+    y: -8,
+    boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.1)',
     transition: { duration: 0.3, ease: 'easeInOut' },
   },
 };
@@ -55,6 +55,7 @@ const staggerChildren: Variants = {
 };
 
 export default function HomePage() {
+
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
 
   // Simulate auth check
@@ -77,27 +78,27 @@ export default function HomePage() {
 
   return (
 
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-indigo-50 overflow-hidden">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-indigo-50 overflow-hidden font-inter antialiased">
 
-      {/* Navbar - Professional Top Bar */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-200/50 px-4">
+      {/* Navbar - Clean, Modern Top Bar with Subtle Shadow */}
+      <nav className="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-100 px-6">
         <div className="container mx-auto flex justify-between items-center py-4">
           <Link href="/" className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             AgentForge
           </Link>
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
+          <div className="flex items-center space-x-6">
+            <Button variant="ghost" asChild className="text-gray-700 hover:text-indigo-600 transition-colors">
               <Link href="/dashboard">Watch Demo</Link>
             </Button>
             {isUserSignedIn ? (
               // <UserButton afterSignOutUrl="/" />
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">
                 Sign Out
               </Button>
             ) : (
-              <Button variant="secondary" size="sm" asChild>
+              <Button variant="default" size="sm" asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
                 <Link href="/auth/signin">
-                  <LogIn /> Sign In
+                  <LogIn className="mr-2 h-4 w-4" /> Sign In
                 </Link>
               </Button>
             )}
@@ -105,75 +106,59 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero Section - Enhanced with More Depth */}
-      <section className="relative pt-24 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-r from-indigo-600/5 to-purple-600/5"></div>
-        <div className="relative container mx-auto px-4 text-center">
+      {/* Hero Section - Immersive with Refined Typography and Animations */}
+      <section className="relative pt-28 pb-40 overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-r from-indigo-600/5 to-purple-600/5 opacity-50"></div>
+        <div className="relative container mx-auto px-6 text-center">
           <motion.div
-            initial={{ opacity: 0, y: -60 }}
+            initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: 'easeOut' }}
           >
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-indigo-100/80 text-indigo-700 text-sm font-medium mb-6 shadow-sm">
               🚀 Trusted by 10K+ Creators & Teams
             </div>
-            <h1 className="text-5xl md:text-7xl font-black leading-tight mb-6 text-slate-900">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-tight mb-6 text-gray-900 tracking-tight">
               Autonomous AI Agents
               <span className="block bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">That Actually Work</span>
             </h1>
-            <p className="text-lg md:text-xl text-slate-600 max-w-4xl mx-auto mb-8 leading-relaxed font-medium">
+            <p className="text-lg md:text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto mb-10 leading-relaxed font-medium">
               Empower your day with intelligent agents that manage emails, craft flawless travel plans, deliver curated news insights, and simulate high-stakes interviews.
               From prompt to productivity—seamlessly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href={"/dashboard"}>
-                <Button size="lg" className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl shadow-xl font-semibold text-lg cursor-pointer">
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-6 rounded-lg shadow-lg font-semibold text-lg transform hover:scale-105 transition-transform">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="px-10 py-4 rounded-xl border-slate-300 font-semibold text-lg">
+              <Button variant="outline" size="lg" className="px-10 py-6 rounded-lg border-gray-300 font-semibold text-lg hover:bg-gray-50 transition-colors">
                 View Pricing
               </Button>
             </div>
-            {/* Mockup Image Placeholder */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-              className="mt-12 mx-auto max-w-4xl"
-            >
-              <div className="relative bg-slate-100 rounded-2xl p-8 shadow-2xl">
-                <img
-                  src="/api/placeholder/800/400"
-                  alt="AgentForge Dashboard"
-                  className="w-full rounded-xl shadow-lg"
-                />
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">Live Demo</div>
-              </div>
-            </motion.div>
           </motion.div>
         </div>
-        {/* Enhanced Floating Elements */}
+        {/* Subtle Floating Orbs for Depth */}
         <motion.div
-          className="absolute top-1/4 right-8 hidden xl:block"
-          animate={{ y: [0, -30, 0], rotate: 360 }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+          className="absolute top-1/4 right-12 hidden xl:block"
+          animate={{ y: [0, -40, 0], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-20 h-20 bg-linear-to-r from-indigo-400/30 to-purple-400/30 rounded-full blur-xl"></div>
+          <div className="w-24 h-24 bg-linear-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
         </motion.div>
         <motion.div
-          className="absolute bottom-1/4 left-8 hidden xl:block"
-          animate={{ y: [0, 30, 0] }}
-          transition={{ duration: 15, repeat: Infinity }}
+          className="absolute bottom-1/4 left-12 hidden xl:block"
+          animate={{ y: [0, 40, 0], opacity: [0.8, 1, 0.8] }}
+          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
         >
-          <div className="w-16 h-16 bg-linear-to-r from-slate-400/30 to-indigo-400/30 rounded-full blur-xl"></div>
+          <div className="w-20 h-20 bg-linear-to-r from-gray-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
         </motion.div>
       </section>
 
-      {/* How It Works Section - New Content */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+      {/* How It Works Section - Clean, Card-Based Layout */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -181,8 +166,8 @@ export default function HomePage() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">How AgentForge Works</h2>
-            <p className="text-xl text-slate-600 max-w-3xl mx-auto">Three simple steps to unleash AI that thinks and acts like your best teammate.</p>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">How AgentForge Works</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto font-medium">Three simple steps to unleash AI that thinks and acts like your best teammate.</p>
           </motion.div>
           <motion.div
             variants={containerVariants}
@@ -192,16 +177,16 @@ export default function HomePage() {
             className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
           >
             {howItWorksSteps.map((step, index) => (
-              <motion.div key={index} variants={itemVariants} whileHover="hover">
-                <Card className="h-full border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-slate-50/50 backdrop-blur-sm">
+              <motion.div key={index} variants={cardVariants} whileHover="hover">
+                <Card className="h-full border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
                   <CardHeader className="pb-4 text-center">
-                    <div className="w-16 h-16 bg-linear-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                      <step.icon className="h-7 w-7 text-white" />
+                    <div className="w-16 h-16 bg-linear-to-r from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-md">
+                      <step.icon className="h-8 w-8 text-white" />
                     </div>
-                    <CardTitle className="text-xl font-semibold text-slate-800">{step.title}</CardTitle>
+                    <CardTitle className="text-xl font-semibold text-gray-800">{step.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-slate-600 text-center font-medium">{step.desc}</p>
+                    <p className="text-gray-600 text-center font-medium leading-relaxed">{step.desc}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -210,9 +195,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Grid - Enhanced Descriptions */}
-      <section className="relative py-20 -mt-8">
-        <div className="container mx-auto px-4">
+      {/* Features Grid - Vibrant, Interactive Cards */}
+      <section className="relative py-24 bg-linear-to-br from-gray-50 to-indigo-50 -mt-8">
+        <div className="container mx-auto px-6">
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -222,18 +207,18 @@ export default function HomePage() {
           >
             {/* Email Agent Card */}
             <motion.div variants={cardVariants} whileHover="hover" className="group">
-              <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-slate-200/30">
+              <Card className="h-full border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
                 <CardHeader className="pb-4">
-                  <div className="w-12 h-12 bg-linear-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-linear-to-r from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow">
                     <MessageSquare className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-slate-800">Email Mastery Agent</CardTitle>
-                  <CardDescription className="text-slate-600 font-medium">
+                  <CardTitle className="text-xl font-semibold text-gray-800">Email Mastery Agent</CardTitle>
+                  <CardDescription className="text-gray-600 font-medium leading-relaxed">
                     Conquer inbox overload with AI that reads, prioritizes, drafts personalized replies, and automates follow-ups—saving you 5+ hours weekly.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-indigo-50 transition-colors font-medium cursor-pointer">
+                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-indigo-50 transition-colors font-medium text-indigo-600">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -242,18 +227,18 @@ export default function HomePage() {
 
             {/* Travel Planner Card */}
             <motion.div variants={cardVariants} whileHover="hover" className="group">
-              <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-slate-200/30">
+              <Card className="h-full border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
                 <CardHeader className="pb-4">
-                  <div className="w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-linear-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow">
                     <Plane className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-slate-800">Live Travel Orchestrator</CardTitle>
-                  <CardDescription className="text-slate-600 font-medium">
+                  <CardTitle className="text-xl font-semibold text-gray-800">Live Travel Orchestrator</CardTitle>
+                  <CardDescription className="text-gray-600 font-medium leading-relaxed">
                     Real-time flight, hotel, and itinerary optimization with deal alerts and seamless booking integration—your ultimate wanderlust companion.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-emerald-50 transition-colors font-medium cursor-pointer">
+                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-emerald-50 transition-colors font-medium text-emerald-600">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -262,18 +247,18 @@ export default function HomePage() {
 
             {/* News Search Card */}
             <motion.div variants={cardVariants} whileHover="hover" className="group">
-              <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-slate-200/30">
+              <Card className="h-full border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
                 <CardHeader className="pb-4">
-                  <div className="w-12 h-12 bg-linear-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-linear-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow">
                     <Newspaper className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-slate-800">Intelligent News Curator</CardTitle>
-                  <CardDescription className="text-slate-600 font-medium">
+                  <CardTitle className="text-xl font-semibold text-gray-800">Intelligent News Curator</CardTitle>
+                  <CardDescription className="text-gray-600 font-medium leading-relaxed">
                     Personalized daily digests, trend tracking, and deep-dive summaries from global sources—stay informed without the noise.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-amber-50 transition-colors font-medium cursor-pointer">
+                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-amber-50 transition-colors font-medium text-amber-600">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -282,18 +267,18 @@ export default function HomePage() {
 
             {/* Interview Agent Card */}
             <motion.div variants={cardVariants} whileHover="hover" className="group">
-              <Card className="h-full border-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border-slate-200/30">
+              <Card className="h-full border border-gray-200 shadow-lg hover:shadow-2xl transition-all duration-300 bg-white rounded-2xl overflow-hidden">
                 <CardHeader className="pb-4">
-                  <div className="w-12 h-12 bg-linear-to-r from-rose-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-linear-to-r from-rose-500 to-pink-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow">
                     <Mic className="h-6 w-6 text-white" />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-slate-800">Live Interview Coach</CardTitle>
-                  <CardDescription className="text-slate-600 font-medium">
+                  <CardTitle className="text-xl font-semibold text-gray-800">Live Interview Coach</CardTitle>
+                  <CardDescription className="text-gray-600 font-medium leading-relaxed">
                     Voice-enabled mock interviews with instant feedback on delivery, content, and strategy—boost your confidence for real-world success.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-rose-50 transition-colors font-medium cursor-pointer">
+                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-rose-50 transition-colors font-medium text-rose-600">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -303,9 +288,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section - Animated Numbers */}
-      <section className="py-20 bg-linear-to-r from-slate-50 to-indigo-50">
-        <div className="container mx-auto px-4">
+      {/* Stats Section - Dynamic Animated Counters */}
+      <section className="py-24 bg-linear-to-r from-gray-50 to-indigo-50">
+        <div className="container mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -314,55 +299,55 @@ export default function HomePage() {
           >
             <motion.div variants={itemVariants}>
               <motion.h3
-                className="text-5xl font-black text-indigo-600 mb-3"
+                className="text-5xl lg:text-6xl font-extrabold text-indigo-600 mb-3"
                 initial={{ y: 20 }}
                 whileInView={{ y: 0 }}
                 transition={{ duration: 1, ease: 'easeOut' }}
               >
                 25K+
               </motion.h3>
-              <p className="text-slate-600 font-semibold text-lg">Agents Activated</p>
-              <p className="text-sm text-slate-500">Across 50+ countries</p>
+              <p className="text-gray-700 font-semibold text-lg">Agents Activated</p>
+              <p className="text-sm text-gray-500">Across 50+ countries</p>
             </motion.div>
             <motion.div variants={itemVariants}>
               <motion.h3
-                className="text-5xl font-black text-emerald-600 mb-3"
+                className="text-5xl lg:text-6xl font-extrabold text-emerald-600 mb-3"
                 initial={{ y: 20 }}
                 whileInView={{ y: 0 }}
                 transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
               >
                 99.99%
               </motion.h3>
-              <p className="text-slate-600 font-semibold text-lg">Uptime Guarantee</p>
-              <p className="text-sm text-slate-500">Enterprise-grade reliability</p>
+              <p className="text-gray-700 font-semibold text-lg">Uptime Guarantee</p>
+              <p className="text-sm text-gray-500">Enterprise-grade reliability</p>
             </motion.div>
             <motion.div variants={itemVariants}>
               <motion.h3
-                className="text-5xl font-black text-purple-600 mb-3"
+                className="text-5xl lg:text-6xl font-extrabold text-purple-600 mb-3"
                 initial={{ y: 20 }}
                 whileInView={{ y: 0 }}
                 transition={{ duration: 1, delay: 0.4, ease: 'easeOut' }}
               >
                 $2M+
               </motion.h3>
-              <p className="text-slate-600 font-semibold text-lg">Hours Saved</p>
-              <p className="text-sm text-slate-500">For our users annually</p>
+              <p className="text-gray-700 font-semibold text-lg">Hours Saved</p>
+              <p className="text-sm text-gray-500">For our users annually</p>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Testimonials - New Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+      {/* Testimonials - Elegant, Quoted Cards */}
+      <section className="py-24 bg-white">
+        <div className="container mx-auto px-6">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4">What Our Users Say</h2>
-            <p className="text-xl text-slate-600 max-w-2xl mx-auto">Join the creators revolutionizing their workflows with AgentForge.</p>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">What Our Users Say</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">Join the creators revolutionizing their workflows with AgentForge.</p>
           </motion.div>
           <motion.div
             variants={containerVariants}
@@ -372,22 +357,22 @@ export default function HomePage() {
             className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto"
           >
             {testimonials.map((testimonial, index) => (
-              <motion.div key={index} variants={itemVariants} whileHover={{ y: -4 }}>
-                <Card className="h-full border-0 shadow-lg bg-linear-to-b from-slate-50 to-white">
-                  <CardContent className="pt-6 pb-8">
+              <motion.div key={index} variants={itemVariants} whileHover={{ y: -6 }}>
+                <Card className="h-full border border-gray-200 shadow-lg bg-linear-to-b from-gray-50 to-white rounded-2xl overflow-hidden">
+                  <CardContent className="pt-6 pb-8 px-6">
                     <div className="flex items-start space-x-4 mb-4">
-                      <div className="w-10 h-10 bg-linear-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-10 h-10 bg-linear-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow">
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">{testimonial.author}</p>
-                        <div className="flex space-x-0.5 text-amber-400">
+                        <p className="font-medium text-gray-800">{testimonial.author}</p>
+                        <div className="flex space-x-1 text-amber-400 mt-1">
                           {[...Array(5)].map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
                         </div>
                       </div>
                     </div>
-                    <Quote className="h-6 w-6 text-slate-300 mb-4 ml-2" />
-                    <p className="text-slate-700 italic font-medium leading-relaxed">"{testimonial.quote}"</p>
+                    <Quote className="h-6 w-6 text-gray-300 mb-4 ml-2 opacity-50" />
+                    <p className="text-gray-700 italic font-medium leading-relaxed">"{testimonial.quote}"</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -396,33 +381,33 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Footer - Enhanced */}
-      <section className="py-24 bg-linear-to-r from-slate-900 via-indigo-900 to-purple-900 text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-r from-indigo-600/20 to-purple-600/20"></div>
-        <div className="relative container mx-auto px-4 text-center">
+      {/* CTA Footer - Bold, linear Background */}
+      <section className="py-28 bg-linear-to-r from-gray-900 via-indigo-900 to-purple-900 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-linear-to-r from-indigo-600/10 to-purple-600/10 opacity-50"></div>
+        <div className="relative container mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <h2 className="text-4xl md:text-5xl font-black mb-6">Ready to Forge Your Future?</h2>
-            <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 tracking-tight">Ready to Forge Your Future?</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed font-medium">
               Start with our free tier and experience the power of autonomous agents. No credit card required—cancel anytime.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-slate-900 hover:bg-slate-100 px-10 py-4 rounded-md shadow-xl font-semibold text-lg cursor-pointer">
+              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 px-10 py-6 rounded-lg shadow-xl font-semibold text-lg transform hover:scale-105 transition-transform">
                 Create Your First Agent
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button variant="outline" size="lg" className="px-10 py-4 text-slate-900 rounded-md border-white/50 font-semibold text-lg cursor-pointer">
+              <Button variant="outline" size="lg" className="px-10 py-6 text-white rounded-lg border-white/40 hover:bg-white/10 font-semibold text-lg transition-colors">
                 <PhoneCall className="mr-2 h-5 w-5" /> Book a Demo Call
               </Button>
             </div>
           </motion.div>
         </div>
-        {/* Simple Footer */}
-        <footer className="border-t border-white/10 mt-16 pt-8">
-          <div className="container mx-auto px-4 text-center text-sm text-slate-400">
+        {/* Footer */}
+        <footer className="border-t border-white/20 mt-16 pt-8">
+          <div className="container mx-auto px-6 text-center text-sm text-gray-400">
             <p>&copy; 2025 AgentForge. All rights reserved. | <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link> | <Link href="/terms" className="hover:text-white transition-colors">Terms</Link></p>
           </div>
         </footer>

@@ -421,7 +421,7 @@ export default function ChatPage() {
                   {config.icon}
                 </div>
                 <div>
-                  <h1 className="text-xl font-black text-slate-900">{config.name}</h1>
+                  <h1 className="text-lg font-bold text-slate-900">{config.name}</h1>
                   <div className="flex items-center gap-3 mt-1">
                     <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-sm font-medium text-emerald-600">Active • Ultra-fast response</span>
@@ -431,10 +431,10 @@ export default function ChatPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => reload()}>
+              <Button variant="ghost" size="icon" className='cursor-pointer' onClick={() => reload()}>
                 <RefreshCw className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Agent settings">
+              <Button variant="ghost" size="icon" className='cursor-pointer' aria-label="Agent settings">
                 <Settings className="h-5 w-5" />
               </Button>
             </div>
@@ -453,7 +453,7 @@ export default function ChatPage() {
                   >
                     {config.icon}
                   </div>
-                  <h2 className="text-3xl font-black text-slate-900 mb-3">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-3">
                     Hey! I'm your <span className={`bg-linear-to-r ${config.gradient} bg-clip-text text-transparent`}>{config.name}</span>
                   </h2>
                   <p className="text-lg text-slate-600">{config.description}</p>
