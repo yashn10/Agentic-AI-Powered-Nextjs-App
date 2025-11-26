@@ -18,6 +18,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 
 const agentConfig: Record<string, any> = {
+  chatbot: { name: 'Conversational Chat Agent', icon: '💬', gradient: 'from-indigo-400 to-sky-500', description: 'Engages in natural conversation, answers questions, and routes to tools when needed (search, web, or domain-specific tools). Designed for chat-first interactions and multi-turn assistance.' },
   email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500', description: 'Helps you draft, organize, and manage your emails efficiently.' },
   travel: { name: 'Live Travel Orchestrator', icon: '✈️', gradient: 'from-emerald-400 to-teal-500', description: 'Assists in planning trips, booking flights, and finding accommodations.' },
   news: { name: 'Intelligent News Curator', icon: '📰', gradient: 'from-amber-400 to-orange-500', description: 'Summarizes news articles and provides sentiment analysis.' },

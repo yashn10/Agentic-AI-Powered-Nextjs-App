@@ -92,13 +92,13 @@ export default function HomePage() {
             </Button>
             {isUserSignedIn ? (
               // <UserButton afterSignOutUrl="/" />
-              <Button variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100">
+              <Button variant="destructive" className="border-gray-300 text-gray-700 hover:bg-gray-100">
                 Sign Out
               </Button>
             ) : (
-              <Button variant="default" size="sm" asChild className="bg-indigo-600 text-white hover:bg-indigo-700">
+              <Button variant="secondary" size="sm" asChild>
                 <Link href="/auth/signin">
-                  <LogIn className="mr-2 h-4 w-4" /> Sign In
+                  <LogIn className="mr-1 h-4 w-4" /> Sign In
                 </Link>
               </Button>
             )}

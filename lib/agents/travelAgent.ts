@@ -2,7 +2,7 @@
 import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
 import { searchFlightsTool, searchHotelsTool, getWeatherTool, getDirectionsTool, geocodeTool } from "@/app/api/tools/travel";
-import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "./middleware";
+import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "../middleware";
 
 
 const llm = new ChatGroq({

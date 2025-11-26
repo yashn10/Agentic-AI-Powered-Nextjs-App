@@ -6,13 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -20,7 +14,6 @@ import {
     Edit,
     Trash2,
     ArrowLeft,
-    Sparkles,
     Bot,
     Code,
     Mail,
@@ -30,6 +23,7 @@ import {
     Loader,
     AlertCircle,
     Copy,
+    BotMessageSquare,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
@@ -265,7 +259,7 @@ export default function CreateAgentPage() {
                     <Card className="border border-gray-100 shadow-xl bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden">
                         <CardHeader className="pb-4 border-b border-gray-100">
                             <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-2 tracking-tight">
-                                <Sparkles className="h-6 w-6 text-indigo-600" />
+                                <BotMessageSquare className="h-6 w-6 text-indigo-600" />
                                 Build Your Agent
                             </CardTitle>
                             <CardDescription className="text-gray-600 font-medium">Customize your AI companion with tools and prompts.</CardDescription>
