@@ -53,9 +53,91 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const [isVoiceMode, setIsVoiceMode] = useState<boolean>(false); // current UI mode: voice vs write
+  const [preferredVoice, setPreferredVoice] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('preferredVoice') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [transcript, setTranscript] = useState<string>('');
+  const recognitionRef = useRef<any | null>(null);
+
   // scroll container ref
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const messagesRef = useRef<ChatMsg[]>([]);
+
+  // put this where your other useEffect declarations are
+  useEffect(() => {
+    // apply preferred voice mode on mount
+    if (agentId === 'interview' && preferredVoice) setIsVoiceMode(true);
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      recognitionRef.current = null;
+      return;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
+
+    // Proper onresult: rebuild transcript every time from event.results
+    rec.onresult = (event: any) => {
+      try {
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i];
+          const t = res[0]?.transcript ?? '';
+          if (res.isFinal) {
+            finalTranscript += t;
+          } else {
+            interimTranscript += t;
+          }
+        }
+
+        // Show the concatenation of finalized text + current interim
+        setTranscript((finalTranscript + interimTranscript).trimStart());
+      } catch (e) {
+        console.error('onresult parse error', e);
+      }
+    };
+
+    rec.onerror = (e: any) => {
+      console.error('SpeechRecognition error', e);
+      toast.error('Speech recognition error');
+      setIsRecording(false);
+    };
+
+    rec.onend = () => {
+      // If we expect to still be recording, try to restart (works around some browser silence stopping)
+      if (isRecording) {
+        try {
+          rec.start();
+        } catch (e) {
+          // ignore start errors
+        }
+      }
+    };
+
+    recognitionRef.current = rec;
+
+    return () => {
+      try {
+        rec.onresult = null;
+        rec.onerror = null;
+        rec.onend = null;
+        rec.stop();
+      } catch { }
+      recognitionRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once
 
   useEffect(() => {
     try {
@@ -66,6 +148,44 @@ export default function ChatPage() {
       // ignore
     }
   }, [messages.length]);
+
+  const startRecording = async () => {
+    if (!recognitionRef.current) {
+      toast.error('Speech recognition not supported in this browser.');
+      return;
+    }
+    try {
+      setTranscript(''); // clear previous transcript
+      setIsRecording(true);
+      recognitionRef.current.start();
+    } catch (e) {
+      console.error('startRecording error', e);
+      toast.error('Unable to start microphone. Check permissions.');
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    try {
+      if (recognitionRef.current) recognitionRef.current.stop();
+    } catch (e) {
+      console.warn('stopRecording error', e);
+    } finally {
+      setIsRecording(false);
+    }
+  };
+
+  // Toggle voice preference persistently
+  const togglePreferredVoice = () => {
+    const next = !preferredVoice;
+    setPreferredVoice(next);
+    try {
+      localStorage.setItem('preferredVoice', next ? 'true' : 'false');
+    } catch { }
+    if (agentId === 'interview') {
+      setIsVoiceMode(next);
+    }
+  };
 
   const copyToClipboard = async (text: string) => {
     if (!text) return toast.error('Nothing to copy');
@@ -114,13 +234,27 @@ export default function ChatPage() {
   }
 
   // send user message -> call API -> append assistant response
-  const sendMessage = async (text: string) => {
-    if (!text || !text.trim()) return;
+  const sendMessage = async (text?: string) => {
+
+    const useText = (() => {
+      if (agentId === 'interview' && isVoiceMode) {
+        // prefer transcript if available, else fall back to typed input
+        return (transcript && transcript.trim()) ? transcript.trim() : (text ?? input).trim();
+      }
+      return (text ?? input).trim();
+    })();
+
+    if (!useText) return toast.error('Nothing to send');
+
+    // If currently recording, stop first and then send
+    if (isRecording) {
+      stopRecording();
+    }
 
     const userMsg: ChatMsg = {
       id: `u-${Date.now()}`,
       role: "user",
-      content: text.trim(),
+      content: useText,
       createdAt: Date.now(),
     };
 
@@ -130,6 +264,7 @@ export default function ChatPage() {
       return next;
     });
     setInput("");
+    setTranscript('');
     setIsLoading(true);
 
     try {
@@ -534,26 +669,94 @@ export default function ChatPage() {
         <div className="border-t border-slate-200 bg-white/80 backdrop-blur-xl px-6 py-5">
           <div className="max-w-5xl mx-auto">
             <form onSubmit={onSubmit} className="flex items-end gap-2" style={{ alignItems: "center" }}>
-              <Button variant="ghost" size="icon" className="shrink-0" type="button" aria-label="Attach file">
+              <div className="flex items-center gap-2">
+                {/* Only show the toggle for interview agent */}
+                {agentId === 'interview' && (
+                  <>
+                    <div className="inline-flex items-center gap-2 mr-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsVoiceMode(false)}
+                        className={`px-3 py-1 rounded-full ${!isVoiceMode ? 'bg-slate-200' : 'bg-transparent'} text-sm`}
+                        aria-pressed={!isVoiceMode}
+                      >
+                        Write
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsVoiceMode(true)}
+                        className={`px-3 py-1 rounded-full ${isVoiceMode ? 'bg-indigo-600 text-white' : 'bg-transparent text-sm'}`}
+                        aria-pressed={isVoiceMode}
+                      >
+                        Voice
+                      </button>
+                      <button
+                        type="button"
+                        onClick={togglePreferredVoice}
+                        className={`ml-2 px-2 py-1 rounded-md text-xs ${preferredVoice ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'}`}
+                        title="Toggle prefer voice mode (persisted)"
+                      >
+                        {preferredVoice ? 'Preferred' : 'Prefer'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* <Button variant="ghost" size="icon" className="shrink-0" type="button" aria-label="Attach file">
                 <Paperclip className="h-5 w-5" />
-              </Button>
+              </Button> */}
 
               <div className="flex-1 relative">
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={`Ask ${config.name} anything...`}
-                  className="h-12 rounded-3xl border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
-                  aria-label="Message"
-                />
-                <Button type="button" size="icon" variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2" aria-label="Voice input">
-                  <Mic className="h-5 w-5 text-slate-500" />
-                </Button>
+                {isVoiceMode && agentId === 'interview' ? (
+                  // Voice mode shows transcript area (editable)
+                  <textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    placeholder={`Speak now or type — press Send to submit.`}
+                    className="h-24 rounded-2xl border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30 p-4 resize-none"
+                    aria-label="Voice transcript"
+                  />
+                ) : (
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder={`Ask ${config.name} anything...`}
+                    className="h-12 rounded-3xl border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    aria-label="Message"
+                  />
+                )}
+
+                {/* Voice controls: show mic / stop when in voice mode */}
+                {agentId === 'interview' && isVoiceMode ? (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isRecording) stopRecording();
+                        else startRecording();
+                      }}
+                      className={`p-2 rounded-full shadow-md ${isRecording ? 'bg-red-500 text-white' : 'bg-white'}`}
+                      aria-pressed={isRecording}
+                    >
+                      <Mic className="h-5 w-5" />
+                    </button>
+                  </div>
+                ) : (
+                  <Button type="button" size="icon" variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2" aria-label="Voice input" onClick={() => {
+                    // quick toggle to voice if user wants it
+                    if (agentId === 'interview') {
+                      setIsVoiceMode(true);
+                    }
+                  }}>
+                    <Mic className="h-5 w-5 text-slate-500" />
+                  </Button>
+                )}
               </div>
 
               <Button
                 type="submit"
-                disabled={isLoading || !(input && input.trim())}
+                disabled={isLoading || (agentId === 'interview' && isVoiceMode && !transcript.trim() && !input.trim()) || (!(input && input.trim()) && !(agentId === 'interview' && transcript.trim()))}
                 className={`rounded-3xl h-12 px-8 font-bold text-white shadow-xl transition-all ${isLoading ? 'bg-slate-400' : 'bg-linear-to-r from-indigo-600 to-purple-600 hover:shadow-2xl'}`}
                 aria-label="Send message"
               >

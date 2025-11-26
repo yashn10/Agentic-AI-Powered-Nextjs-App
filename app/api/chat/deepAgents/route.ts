@@ -2,7 +2,7 @@ import { tool } from "langchain";
 import { TavilySearch } from "@langchain/tavily";
 import { z } from "zod";
 // @ts-ignore: Ignore missing module or type declarations for 'deepagents'
-import { createDeepAgent } from "deepagents";
+// import { createDeepAgent } from "deepagents";
 
 
 const internetSearch = tool(
@@ -61,15 +61,15 @@ Use this to run an internet search for a given query. You can specify the max nu
 `;
 
 
-const agent = createDeepAgent({
-    tools: [internetSearch],
-    systemPrompt: researchInstructions,
-});
+// const agent = createDeepAgent({
+//     tools: [internetSearch],
+//     systemPrompt: researchInstructions,
+// });
 
 
-const result = await agent.invoke({
-    messages: [{ role: "user", content: "What is langgraph?" }],
-});
+// const result = await agent.invoke({
+//     messages: [{ role: "user", content: "What is langgraph?" }],
+// });
 
 // Print the agent's response
-console.log(result.messages[result.messages.length - 1].content);
+// console.log(result.messages[result.messages.length - 1].content);
