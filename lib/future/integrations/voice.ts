@@ -1,5 +1,5 @@
 // // lib/integrations/voice.ts
-// import { createMiddleware } from "langchain";
+import { createMiddleware } from "langchain";
 // Add voice input/output and image handling.
 
 // const multimodalMiddleware = createMiddleware({

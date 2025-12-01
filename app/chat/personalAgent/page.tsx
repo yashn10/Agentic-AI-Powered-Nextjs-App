@@ -23,7 +23,7 @@ import {
     Loader,
     AlertCircle,
     Copy,
-    BotMessageSquare,
+    BotMessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
@@ -192,23 +192,6 @@ export default function CreateAgentPage() {
         }
     };
 
-    // Duplicate agent
-    const handleDuplicate = (agent: Agent) => {
-        try {
-            agentStorage.createAgent({
-                name: `${agent.name} (Copy)`,
-                description: agent.description,
-                systemPrompt: agent.systemPrompt,
-                agentTypes: agent.agentTypes,
-                tools: agent.tools,
-            });
-            setCreatedAgents(agentStorage.getAllAgents());
-            toast.success('Agent duplicated');
-        } catch {
-            toast.error('Duplicate failed');
-        }
-    };
-
     // Copy agent config
     const handleCopyConfig = (agent: Agent) => {
         try {
@@ -240,10 +223,12 @@ export default function CreateAgentPage() {
             {/* Header */}
             <header className="bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-100 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors font-medium">
-                        <ArrowLeft className="h-5 w-5" />
-                        Back to Dashboard
-                    </Link>
+                    <Button variant="secondary" size="sm">
+                        <Link href="/dashboard" className="flex items-center gap-2 text-gray-600 font-medium">
+                            <ArrowLeft className="h-5 w-5" />
+                            Dashboard
+                        </Link>
+                    </Button>
                     <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                         {editingId ? 'Edit Agent' : 'Create Personal Agent'}
                     </h1>
@@ -265,7 +250,7 @@ export default function CreateAgentPage() {
                             <CardDescription className="text-gray-600 font-medium">Customize your AI companion with tools and prompts.</CardDescription>
                         </CardHeader>
 
-                        <CardContent className="p-6">
+                        <CardContent className="px-6">
                             <form onSubmit={handleSubmit} className="space-y-8">
                                 <div className="space-y-3">
                                     <label htmlFor="name" className="text-sm font-semibold text-gray-700">Agent Name</label>
@@ -281,10 +266,12 @@ export default function CreateAgentPage() {
                                     <label className="text-sm font-semibold text-gray-700">Agent Types</label>
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         {AGENT_TYPES.map(type => (
-                                            <Button key={type.id} type="button" variant={selectedAgentTypes.includes(type.id) ? 'default' : 'outline'} onClick={() => handleAgentTypeToggle(type.id)} className="h-20 rounded-xl flex items-center justify-center gap-3">
-                                                <type.icon className="h-5 w-5" />
+                                            <Button key={type.id} type="button" variant={selectedAgentTypes.includes(type.id) ? 'default' : 'outline'} onClick={() => handleAgentTypeToggle(type.id)} className="h-20 rounded-xl flex items-center justify-center gap-3 cursor-pointer">
                                                 <div className="text-left">
-                                                    <div className="text-sm font-semibold">{type.name}</div>
+                                                    <div className="flex gap-2 justify-center text-sm font-semibold" style={{ alignItems: "center" }}>
+                                                        <type.icon className="h-5 w-5" />
+                                                        <span>{type.name}</span>
+                                                    </div>
                                                     <div className="text-xs text-gray-500">{type.description}</div>
                                                 </div>
                                             </Button>
@@ -297,7 +284,7 @@ export default function CreateAgentPage() {
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                         {TOOLS.map(t => (
                                             <motion.div key={t.id} whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }} className="relative">
-                                                <Button type="button" variant={selectedTools.includes(t.id) ? 'default' : 'outline'} onClick={() => handleToolToggle(t.id)} className="h-20 w-full rounded-xl flex flex-col items-center justify-center gap-2">
+                                                <Button type="button" variant={selectedTools.includes(t.id) ? 'default' : 'outline'} onClick={() => handleToolToggle(t.id)} className="h-20 w-full rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer">
                                                     <t.icon className="h-6 w-6" />
                                                     <div className="text-xs font-medium">{t.name}</div>
                                                 </Button>
@@ -323,6 +310,7 @@ export default function CreateAgentPage() {
                     </Card>
                 </motion.div>
 
+
                 {/* History */}
                 <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, ease: 'easeOut' }} className="space-y-6">
 
@@ -330,6 +318,7 @@ export default function CreateAgentPage() {
                         <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Your Created Agents</h2>
                         <Badge variant="outline" className="text-xs font-semibold border-gray-200">{createdAgents.length} total</Badge>
                     </div>
+
 
                     <AnimatePresence>
                         {createdAgents.map((agent, i) => (
@@ -356,7 +345,6 @@ export default function CreateAgentPage() {
                                             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                 <Button variant="ghost" size="sm" onClick={() => handleEdit(agent)} className="h-8 px-3 hover:bg-gray-100 cursor-pointer"><Edit className="h-4 w-4 text-gray-600" /></Button>
                                                 <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(String(agent.id))} className="h-8 px-3 text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"><Trash2 className="h-4 w-4" /></Button>
-                                                <Button variant="ghost" size="sm" onClick={() => handleDuplicate(agent)} className="h-8 px-3 hover:bg-gray-100 cursor-pointer"><Copy className="h-4 w-4 text-gray-600" /></Button>
                                                 <Button variant="ghost" size="sm" onClick={() => handleCopyConfig(agent)} className="h-8 px-3 hover:bg-gray-100 cursor-pointer"><Copy className="h-4 w-4 text-gray-600" /></Button>
                                             </div>
                                         </div>

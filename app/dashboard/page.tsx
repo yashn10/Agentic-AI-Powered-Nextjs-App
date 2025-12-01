@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, Plane, Newspaper, Mic, Plus, Zap, Clock, Bot, Search, Bell, ChevronLeft, ChevronRight, TrendingUp, Sparkles } from 'lucide-react';
+import { MessageSquare, Plane, Newspaper, Mic, Plus, Zap, Clock, Bot, Search, Bell, ChevronLeft, ChevronRight, TrendingUp, Sparkles, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -41,13 +41,12 @@ export default function Dashboard() {
               variant="ghost"
               size="icon"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+              className="text-gray-600 hover:bg-gray-100 rounded-md transition-colors cursor-pointer"
             >
               {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
             </Button>
 
             <Link href="/" className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-xl bg-linear-to-br from-indigo-600 to-purple-600 shadow-lg" />
               <span className="text-2xl font-extrabold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent tracking-tight">
                 AgentForge
               </span>
@@ -82,8 +81,8 @@ export default function Dashboard() {
       <div className="flex pt-16">
 
         {/* Sidebar - Modern with Smooth Transitions */}
-        <aside className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-72'}`}>
-          <nav className="flex h-full flex-col justify-between p-5">
+        <aside className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] border-r border-gray-100 bg-white/95 backdrop-blur-xl shadow-lg transition-all duration-500 ${sidebarCollapsed ? 'w-16' : 'w-60'}`}>
+          <nav className={`flex h-full flex-col justify-between ${sidebarCollapsed ? 'py-5 px-3' : 'p-5'}`}>
             <div className="space-y-2">
               {[
                 { icon: Bot, label: 'Dashboard', href: '/dashboard', active: true },
@@ -95,14 +94,14 @@ export default function Dashboard() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group flex items-center gap-4 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 ${item.active
+                  className={`group flex items-center gap-4 rounded-md py-3 ${sidebarCollapsed ? 'px-2' : 'px-4'} text-sm font-semibold transition-all duration-200 ${item.active
                     ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg hover:shadow-xl'
                     : 'text-gray-700 hover:bg-gray-100 hover:shadow-md hover:text-indigo-600'
                     }`}
                 >
                   <item.icon className="h-5 w-5 shrink-0 transition-colors" />
                   {!sidebarCollapsed && <span className="transition-colors">{item.label}</span>}
-                  {item.active && !sidebarCollapsed && <Sparkles className="ml-auto h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                  {item.active && !sidebarCollapsed && <LayoutDashboard className="ml-auto h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
                 </Link>
               ))}
             </div>
@@ -110,7 +109,7 @@ export default function Dashboard() {
             <div className="space-y-3 border-t border-gray-100 pt-5">
               <Link
                 href="/create"
-                className="group flex items-center gap-4 rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-xl hover:shadow-2xl transition-all duration-300"
+                className="group flex items-center gap-4 rounded-md bg-linear-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-xl hover:shadow-2xl transition-all duration-300"
               >
                 <Plus className="h-5 w-5 group-hover:rotate-12 transition-transform" />
                 {!sidebarCollapsed && 'New Agent'}
@@ -120,7 +119,7 @@ export default function Dashboard() {
         </aside>
 
         {/* Main Content - Enhanced Spacing and Animations */}
-        <main className={`flex-1 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-72'} p-8`}>
+        <main className={`flex-1 transition-all duration-500 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'} p-8`}>
 
           {/* Welcome - Refined Typography */}
           <motion.div

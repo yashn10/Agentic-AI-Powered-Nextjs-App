@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Toaster, toast } from 'sonner';
 import { Spinner } from '@/components/ui/spinner';
-import { Send, Paperclip, Mic, Copy, RefreshCw, Sparkles, ArrowLeft, Settings, ExternalLink } from 'lucide-react';
+import { Send, Mic, Copy, RefreshCw, Sparkles, ArrowLeft, Settings, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
@@ -552,13 +552,13 @@ export default function ChatPage() {
 
               <div className="flex items-center gap-4">
                 <div
-                  className={`h-14 w-14 rounded-xl bg-linear-to-br ${config.gradient} flex items-center justify-center text-white text-3xl shadow-2xl`}
+                  className={`h-12 w-12 rounded-md bg-linear-to-br ${config.gradient} flex items-center justify-center text-white text-3xl shadow-2xl`}
                 >
                   {config.icon}
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-slate-900">{config.name}</h1>
-                  <div className="flex items-center gap-3 mt-1">
+                  <div className="flex items-center gap-3">
                     <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-sm font-medium text-emerald-600">Active • Ultra-fast response</span>
                   </div>
@@ -677,7 +677,7 @@ export default function ChatPage() {
                       <button
                         type="button"
                         onClick={() => setIsVoiceMode(false)}
-                        className={`px-3 py-1 rounded-full ${!isVoiceMode ? 'bg-slate-200' : 'bg-transparent'} text-sm`}
+                        className={`px-3 py-1 rounded-md ${!isVoiceMode ? 'bg-slate-200' : 'bg-transparent'} text-sm cursor-pointer`}
                         aria-pressed={!isVoiceMode}
                       >
                         Write
@@ -685,7 +685,7 @@ export default function ChatPage() {
                       <button
                         type="button"
                         onClick={() => setIsVoiceMode(true)}
-                        className={`px-3 py-1 rounded-full ${isVoiceMode ? 'bg-indigo-600 text-white' : 'bg-transparent text-sm'}`}
+                        className={`px-3 py-1 rounded-md ${isVoiceMode ? 'bg-indigo-600 text-white' : 'bg-transparent'} text-sm cursor-pointer`}
                         aria-pressed={isVoiceMode}
                       >
                         Voice
@@ -693,7 +693,7 @@ export default function ChatPage() {
                       <button
                         type="button"
                         onClick={togglePreferredVoice}
-                        className={`ml-2 px-2 py-1 rounded-md text-xs ${preferredVoice ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'}`}
+                        className={`ml-2 px-2 py-1 rounded-md text-xs ${preferredVoice ? 'bg-amber-100 text-amber-800' : 'bg-slate-100'} cursor-pointer`}
                         title="Toggle prefer voice mode (persisted)"
                       >
                         {preferredVoice ? 'Preferred' : 'Prefer'}
@@ -714,7 +714,7 @@ export default function ChatPage() {
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                     placeholder={`Speak now or type — press Send to submit.`}
-                    className="h-24 rounded-2xl border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30 p-4 resize-none"
+                    className="h-12 w-full rounded-md border-slate-300 bg-slate-50/70 pr-14 text-sm placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30 p-4 resize-none"
                     aria-label="Voice transcript"
                   />
                 ) : (
@@ -722,7 +722,7 @@ export default function ChatPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={`Ask ${config.name} anything...`}
-                    className="h-12 rounded-3xl border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    className="h-12 rounded-md border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
                     aria-label="Message"
                   />
                 )}
@@ -757,7 +757,7 @@ export default function ChatPage() {
               <Button
                 type="submit"
                 disabled={isLoading || (agentId === 'interview' && isVoiceMode && !transcript.trim() && !input.trim()) || (!(input && input.trim()) && !(agentId === 'interview' && transcript.trim()))}
-                className={`rounded-3xl h-12 px-8 font-bold text-white shadow-xl transition-all ${isLoading ? 'bg-slate-400' : 'bg-linear-to-r from-indigo-600 to-purple-600 hover:shadow-2xl'}`}
+                className={`rounded-md h-12 px-8 font-bold text-white shadow-xl transition-all ${isLoading ? 'bg-slate-400' : 'bg-linear-to-r from-indigo-600 to-purple-600 hover:shadow-2xl'}`}
                 aria-label="Send message"
               >
                 {isLoading ? <Spinner className="h-5 w-5" /> : <>Send <Send className="ml-1 h-5 w-5" /></>}

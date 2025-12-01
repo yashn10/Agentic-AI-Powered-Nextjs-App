@@ -1,10 +1,11 @@
 // lib/agents/chatAgent.ts
+import { webSearchTool, sendEmailTool, calculatorTool } from "@/app/api/tools/chat";
 import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
 
 
 const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
+    model: process.env.GROQ_MODEL_4,
     temperature: 0.3,
     maxTokens: 1500,
 });

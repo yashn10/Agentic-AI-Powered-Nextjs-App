@@ -82,7 +82,7 @@ export const networkRetry = toolRetryMiddleware({
 
 
 export const toolLimit = toolCallLimitMiddleware({
-    runLimit: 5, // Max 10 tool calls per user query
+    runLimit: 3, // Max 10 tool calls per user query
     exitBehavior: "continue", // Continue with error message instead of throwing
 });
 
