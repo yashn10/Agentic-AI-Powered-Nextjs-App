@@ -18,12 +18,12 @@ import { useParams, useRouter } from 'next/navigation';
 
 
 const agentConfig: Record<string, any> = {
-  chatbot: { name: 'Conversational Chat Agent', icon: '💬', gradient: 'from-indigo-400 to-sky-500', description: 'Engages in natural conversation, answers questions, and routes to tools when needed (search, web, or domain-specific tools). Designed for chat-first interactions and multi-turn assistance.' },
-  email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500', description: 'Helps you draft, organize, and manage your emails efficiently.' },
-  travel: { name: 'Live Travel Orchestrator', icon: '✈️', gradient: 'from-emerald-400 to-teal-500', description: 'Assists in planning trips, booking flights, and finding accommodations.' },
-  news: { name: 'Intelligent News Curator', icon: '📰', gradient: 'from-amber-400 to-orange-500', description: 'Summarizes news articles and provides sentiment analysis.' },
-  interview: { name: 'Live Interview Coach', icon: '🎙️', gradient: 'from-rose-400 to-pink-500', description: 'Prepares you for interviews with practice questions and feedback.' },
-  personalAgent: { name: 'Personal AI Agent', icon: '🤖', gradient: 'from-green-400 to-lime-500', description: 'Creates a customized AI agent tailored to your personal needs.' },
+  chatbot: { name: 'Conversational Chat Agent', icon: '💬', gradient: 'from-indigo-400 to-sky-500', description: 'Engages in natural conversation, answers questions, and routes to tools when needed (search, web, or domain-specific tools). Designed for chat-first interactions and multi-turn assistance.', active: true },
+  email: { name: 'Email Mastery Agent', icon: '✉️', gradient: 'from-indigo-400 to-purple-500', description: 'Helps you draft, organize, and manage your emails efficiently.', active: false },
+  travel: { name: 'Live Travel Orchestrator', icon: '✈️', gradient: 'from-emerald-400 to-teal-500', description: 'Assists in planning trips, booking flights, and finding accommodations.', active: true },
+  news: { name: 'Intelligent News Curator', icon: '📰', gradient: 'from-amber-400 to-orange-500', description: 'Summarizes news articles and provides sentiment analysis.', active: true },
+  interview: { name: 'Live Interview Coach', icon: '🎙️', gradient: 'from-rose-400 to-pink-500', description: 'Prepares you for interviews with practice questions and feedback.', active: true },
+  personalAgent: { name: 'Personal AI Agent', icon: '🤖', gradient: 'from-green-400 to-lime-500', description: 'Creates a customized AI agent tailored to your personal needs.', active: true },
 };
 
 type NewsSource = {
@@ -559,8 +559,15 @@ export default function ChatPage() {
                 <div>
                   <h1 className="text-lg font-bold text-slate-900">{config.name}</h1>
                   <div className="flex items-center gap-3">
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-sm font-medium text-emerald-600">Active • Ultra-fast response</span>
+                    <div className={`h-2.5 w-2.5 rounded-full ${config.active ? 'bg-emerald-500' : 'bg-red-400'} bg-emerald-500 animate-pulse`} />
+                    <span className="flex gap-2 text-sm font-medium text-emerald-600">
+                      <span className={`${config.active ? 'text-emerald-600' : 'text-red-400'}`}>{config.active === true ? 'Active' : 'Inactive'}</span>
+                      {config.active ? (
+                        <span>• Ultra-fast response</span>
+                      ) : (
+                        <span className='text-red-400'>• Under development</span>
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -722,7 +729,7 @@ export default function ChatPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={`Ask ${config.name} anything...`}
-                    className="h-12 rounded-md border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30"
+                    className={`h-12 rounded-md border-slate-300 bg-slate-50/70 pr-14 text-lg placeholder:text-slate-500 focus-visible:ring-2 focus-visible:ring-indigo-500/30 ${config.active ? '' : 'pointer-events-none opacity-50'}`}
                     aria-label="Message"
                   />
                 )}

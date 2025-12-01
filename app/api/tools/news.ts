@@ -8,6 +8,7 @@ import { DuckDuckGoSearch } from "@langchain/community/tools/duckduckgo_search";
 export const tavilyClient = new TavilySearch({
     apiKey: process.env.TAVILY_API_KEY,
     maxResults: 6,
+    topic: "news",  // Dedicated news index
 });
 
 
