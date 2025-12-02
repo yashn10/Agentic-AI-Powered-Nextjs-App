@@ -1,14 +1,6 @@
 // app/api/tools/chat.ts
-import { ChatGroq } from "@langchain/groq";
 import { tool } from "langchain";
 import z from "zod";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL_4,
-    temperature: 0.4,
-    maxTokens: 3000
-});
 
 
 export const webSearchTool = tool(

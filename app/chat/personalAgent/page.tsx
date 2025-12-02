@@ -15,15 +15,16 @@ import {
     Trash2,
     ArrowLeft,
     Bot,
-    Code,
     Mail,
     Check,
-    Calendar,
+    BotMessageSquareIcon,
     Search,
     Loader,
     AlertCircle,
     Copy,
-    BotMessageSquare
+    BotMessageSquare,
+    Plane,
+    Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { Toaster, toast } from 'sonner';
@@ -39,9 +40,9 @@ const AGENT_TYPES = [
 
 const TOOLS = [
     { id: 'email', name: 'Email Integration', icon: Mail, color: 'indigo' },
+    { id: 'chat', name: 'Chat Integration', icon: BotMessageSquareIcon, color: 'amber' },
     { id: 'web-search', name: 'Web Search', icon: Search, color: 'emerald' },
-    { id: 'calendar', name: 'Calendar', icon: Calendar, color: 'amber' },
-    { id: 'code', name: 'Code Execution', icon: Code, color: 'rose' },
+    { id: 'travel', name: 'Travel Planner', icon: Plane, color: 'rose' },
 ];
 
 export default function CreateAgentPage() {
@@ -174,21 +175,6 @@ export default function CreateAgentPage() {
             toast.error('Delete failed');
         } finally {
             setShowDeleteConfirm(null);
-        }
-    };
-
-    // Toggle active/idle
-    const handleToggleStatus = (id: string) => {
-        try {
-            const updated = agentStorage.toggleAgentStatus(id);
-            if (updated) {
-                setCreatedAgents(agentStorage.getAllAgents());
-                toast.success(`Agent ${updated.status === 'active' ? 'activated' : 'deactivated'}`);
-            } else {
-                toast.error('Failed to update status');
-            }
-        } catch {
-            toast.error('Failed to update status');
         }
     };
 
@@ -328,8 +314,10 @@ export default function CreateAgentPage() {
                                         <div className="flex items-start justify-between">
                                             <Avatar className="h-10 w-10 ring-2 ring-indigo-500/20"><AvatarFallback className="bg-indigo-500 text-white">{String(agent.name?.charAt(0) || 'A')}</AvatarFallback></Avatar>
                                             <div className="flex-1 ml-4">
-                                                <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">{agent.name}</CardTitle>
-                                                <CardDescription className="text-sm text-gray-600 font-medium leading-relaxed">{agent.description}</CardDescription>
+                                                <Link href={`/chat/personalAgent/${agent.id}`}>
+                                                    <CardTitle className="text-lg font-bold text-gray-900 tracking-tight">{agent.name}</CardTitle>
+                                                    <CardDescription className="text-sm text-gray-600 font-medium leading-relaxed">{agent.description}</CardDescription>
+                                                </Link>
                                             </div>
                                             <Badge variant={agent.status === 'active' ? 'default' : 'secondary'} className={`${agent.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'} font-medium`}>{String(agent.status).charAt(0).toUpperCase() + String(agent.status).slice(1)}</Badge>
                                         </div>

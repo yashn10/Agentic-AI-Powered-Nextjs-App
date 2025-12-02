@@ -24,7 +24,7 @@ export async function searchTavilyNews(query: string) {
             {
                 api_key: process.env.TAVILY_API_KEY,
                 query: query,
-                max_results: 5,
+                max_results: 6,
                 include_answer: true,
                 search_depth: "advanced",  // ✅ Get better results
             }

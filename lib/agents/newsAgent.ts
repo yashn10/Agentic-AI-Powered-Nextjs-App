@@ -89,7 +89,7 @@ IMPORTANT:
 
 Respond with ONLY valid JSON in this format (no other text):
 {
-  "summary": "2-3 sentence summary of the key news points",
+  "summary": "5-10 sentence summary of the key news points",
   "sentiment": "positive or negative or neutral",
   "sources": [
     {
@@ -102,9 +102,9 @@ Respond with ONLY valid JSON in this format (no other text):
 
 Rules:
 - Respond with ONLY the JSON object, no markdown or explanations
-- Summary should be 2-3 sentences, clear and informative
+- Summary should be 5-10 sentences, clear and informative
 - Sentiment must be: positive, negative, or neutral
-- Include 2-3 most relevant sources from the news data
+- Include 5-10 most relevant sources from the news data
 - Each source must have title, url, and source fields
 
 News data to analyze:
