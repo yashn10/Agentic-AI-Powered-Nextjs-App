@@ -1,26 +1,24 @@
 // app/api/chat/email/route.ts
 import { NextResponse } from "next/server";
 import { getEmailAgent } from "@/lib/agents/emailAgent";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 
 export async function POST(req: Request) {
     try {
         // ✅ Check authentication
-        const session = await getServerSession(authOptions);
-        if (!session?.user) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        // const session = await getServerSession(authOptions);
+        // if (!session?.user) {
+        //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        // }
 
         // ✅ Check Gmail token exists
-        const gmailToken = (session.user as any)?.gmailToken;
-        if (!gmailToken?.access_token) {
-            return NextResponse.json(
-                { error: "Gmail not connected. Please sign in with Google." },
-                { status: 401 }
-            );
-        }
+        // const gmailToken = (session.user as any)?.gmailToken;
+        // if (!gmailToken?.access_token) {
+        //     return NextResponse.json(
+        //         { error: "Gmail not connected. Please sign in with Google." },
+        //         { status: 401 }
+        //     );
+        // }
 
         const body = await req.json();
         const messages = Array.isArray(body?.messages) ? body.messages : [];

@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Plane, Newspaper, Mic, Plus, Zap, Clock, Bot, Search, Bell, ChevronLeft, ChevronRight, TrendingUp, Sparkles, LayoutDashboard } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { User } from '@/components/userContext';
 
 const agents = [
   { id: 'email', title: 'Email Mastery Agent', icon: MessageSquare, gradient: 'from-indigo-500 to-purple-600', status: 'active', lastUsed: '2 min ago', tasks: 47 },
@@ -28,6 +29,16 @@ const stats = [
 export default function Dashboard() {
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setUser(user);
+    }
+  }, [])
+
 
   return (
 
@@ -58,19 +69,25 @@ export default function Dashboard() {
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
               <Input
                 placeholder="Search agents, tasks, messages..."
-                className="h-11 w-full rounded-2xl border-gray-200 bg-gray-50/70 pl-11 pr-4 text-sm focus-visible:ring-2 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-300 transition-all"
+                className="h-11 w-full rounded-lg border-gray-200 bg-gray-50/70 pl-11 pr-4 text-sm focus-visible:ring-2 focus-visible:ring-indigo-500/30 focus-visible:border-indigo-300 transition-all"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <Button size="icon" variant="ghost" className="relative hover:bg-gray-100 rounded-xl transition-colors">
+            <Button size="icon" variant="ghost" className="relative hover:bg-gray-100 rounded-xl transition-colors cursor-pointer">
               <Bell className="h-5 w-5 text-gray-600" />
               <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-linear-to-r from-pink-500 to-rose-500 ring-2 ring-white shadow" />
             </Button>
             <Avatar className="h-10 w-10 ring-2 ring-white shadow-lg">
+              <AvatarImage
+                src={user?.picture}
+                alt="Profile Picture"
+                className="object-cover"
+              />
+
               <AvatarFallback className="bg-linear-to-br from-indigo-500 to-purple-600 text-white font-bold">
-                A
+                {user?.given_name?.charAt(0) ?? "A"}
               </AvatarFallback>
             </Avatar>
           </div>
@@ -108,7 +125,7 @@ export default function Dashboard() {
 
             <div className="space-y-3 border-t border-gray-100 pt-5">
               <Link
-                href="/create"
+                href="/chat/personalAgent"
                 className="group flex items-center gap-4 rounded-md bg-linear-to-r from-indigo-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-xl hover:shadow-2xl transition-all duration-300"
               >
                 <Plus className="h-5 w-5 group-hover:rotate-12 transition-transform" />
@@ -129,7 +146,7 @@ export default function Dashboard() {
             className="mb-10"
           >
             <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2 tracking-tight">
-              Good evening, <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Alex</span>
+              Good evening, <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{user && user.given_name}</span>
             </h1>
             <p className="text-lg text-gray-600 font-medium">Your agents saved you <span className="font-bold text-indigo-600">3.2 hours</span> today • Up 15% this week</p>
           </motion.div>

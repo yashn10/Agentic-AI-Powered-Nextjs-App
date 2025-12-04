@@ -4,13 +4,13 @@
 import { motion, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowRight, MessageSquare, Plane, Newspaper, Mic, Zap, Shield, Clock, LogIn, Quote, PhoneCall } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { ArrowRight, MessageSquare, Plane, Newspaper, Mic, Zap, Shield, Clock, LogIn, Quote, PhoneCall, LogOutIcon } from 'lucide-react';
+import { useState, useEffect, useContext } from 'react';
 import Link from 'next/link';
-// import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import Signin from './auth/signin';
+import Logout from './auth/logout';
+import userContext from '@/components/userContext';
 
-// Assume Inter font is loaded via globals.css: @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-// And body { font-family: 'Inter', sans-serif; }
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -57,11 +57,15 @@ const staggerChildren: Variants = {
 export default function HomePage() {
 
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+  const [openDialogue, setOpenDialogue] = useState(false);
+  const [openOutDialogue, setOpenOutDialogue] = useState(false);
+  const { user, setUser } = useContext(userContext);
 
   // Simulate auth check
   useEffect(() => {
-    // In real: const { isSignedIn } = useUser();
-    // setIsUserSignedIn(isSignedIn);
+    if (user) {
+      setIsUserSignedIn(true);
+    }
   }, []);
 
   const testimonials = [
@@ -91,15 +95,12 @@ export default function HomePage() {
               <Link href="/dashboard">Watch Demo</Link>
             </Button>
             {isUserSignedIn ? (
-              // <UserButton afterSignOutUrl="/" />
-              <Button variant="destructive" className="border-gray-300 text-gray-700 hover:bg-gray-100">
-                Sign Out
+              <Button variant="secondary" size="sm" onClick={() => setOpenOutDialogue(true)} className="border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer">
+                <LogOutIcon className="h-4 w-4" /> Log Out
               </Button>
             ) : (
-              <Button variant="secondary" size="sm" asChild>
-                <Link href="/auth/signin">
-                  <LogIn className="mr-1 h-4 w-4" /> Sign In
-                </Link>
+              <Button variant="secondary" size="sm" className='cursor-pointer' onClick={() => setOpenDialogue(true)}>
+                <LogIn className="mr-1 h-4 w-4" /> Sign In
               </Button>
             )}
           </div>
@@ -412,6 +413,9 @@ export default function HomePage() {
           </div>
         </footer>
       </section>
+
+      <Signin openDialogue={openDialogue} closeDialogue={setOpenDialogue} />
+      <Logout openoutDialogue={openOutDialogue} closeDialogue={setOpenOutDialogue} />
 
     </div>
 
