@@ -10,7 +10,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
     const [user, setUser] = useState<User | null>(null);
 
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID;
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_AUTH_CLIENT_ID;
 
     if (!clientId) {
         throw new Error(

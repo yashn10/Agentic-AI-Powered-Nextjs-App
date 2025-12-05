@@ -4,8 +4,8 @@ import * as z from "zod";
 import { google } from "googleapis";
 
 
-const CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+const CLIENT_ID = process.env.GOOGLE_AUTH_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_AUTH_CLIENT_SECRET;
 if (!CLIENT_ID || !CLIENT_SECRET) {
     console.warn("Warning: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in env.");
 }
