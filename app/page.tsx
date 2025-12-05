@@ -63,10 +63,17 @@ export default function HomePage() {
 
   // Simulate auth check
   useEffect(() => {
-    if (user) {
+    const userdata = localStorage.getItem('user');
+    if (user || userdata) {
       setIsUserSignedIn(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      setIsUserSignedIn(true);
+    }
+  }, [user]);
 
   const testimonials = [
     { quote: "AgentForge transformed my workflow—my email agent handles 80% of my inbox now!", author: "Sarah L., Founder @ TechStartup", avatar: "S" },

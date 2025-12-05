@@ -55,8 +55,8 @@ const Logout = ({ openoutDialogue, closeDialogue }: SigninProps) => {
                 >
                     <div className="flex flex-col items-start justify-between gap-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-                                <XCircle className="h-6 w-6 text-rose-600" />
+                            <div className="w-12 h-12 rounded-lg flex">
+                                <XCircle onClick={handleCancel} className="h-6 w-6 text-rose-600 hover:text-rose-400 cursor-pointer" />
                             </div>
                             <div>
                                 <DialogTitle className="text-lg font-semibold text-gray-900">
