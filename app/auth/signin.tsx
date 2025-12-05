@@ -54,12 +54,15 @@ const Signin = ({ openDialogue, closeDialogue }: SigninProps) => {
                 {/* content centered in viewport */}
                 <DialogPrimitive.Content
                     className={
-                        "fixed z-50 left-1/2 top-1/2 max-w-lg w-[90%] bg-gray-50 rounded-xl shadow-xl " +
+                        "fixed z-50 left-1/2 top-1/2 max-w-lg w-[90%] bg-white rounded-xl shadow-xl " +
                         "transform -translate-x-1/2 -translate-y-1/2 p-6"
                     }
                 >
                     <div className="p-2 gap-6 flex flex-col">
-                        <DialogPrimitive.Title className="text-center text-lg font-semibold">Please sign in to continue</DialogPrimitive.Title>
+                        <div className="flex items-center">
+                            <img src="/images/login.png" className="w-15" alt="Login" />
+                            <DialogPrimitive.Title className="w-90 text-center text-lg font-semibold">Please sign in to continue</DialogPrimitive.Title>
+                        </div>
                         <DialogPrimitive.Description className="text-center text-sm text-gray-600">
                             To use this feature you need to be signed in with your Google account.
                         </DialogPrimitive.Description>
