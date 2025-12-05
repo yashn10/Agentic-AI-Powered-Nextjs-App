@@ -63,7 +63,8 @@ export default function HomePage() {
 
   // Simulate auth check
   useEffect(() => {
-    if (user) {
+    const userdata = localStorage.getItem('user');
+    if (user || userdata) {
       setIsUserSignedIn(true);
     }
   }, []);

@@ -1,23 +1,14 @@
 // app/api/tools/email.ts
 import { tool } from "langchain";
 import * as z from "zod";
-// import { google } from "googleapis";
-// import nodemailer from "nodemailer";
+import { google } from "googleapis";
 
-/*
-  Notes:
-  - This file expects GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in env.
-  - Tools accept a second `context` argument (in LangChain) which must include
-    the user's refresh token (context.gmailToken.refresh_token) or
-    header 'x-gmail-token' (stringified JSON) containing refresh_token.
-  - Primary send method uses Gmail API messages.send so emails are sent
-    from the logged-in user's account.
-*/
-// const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-// const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-// if (!CLIENT_ID || !CLIENT_SECRET) {
-//     console.warn("Warning: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in env.");
-// }
+
+const CLIENT_ID = process.env.GOOGLE_OAUTH_CLIENT_ID;
+const CLIENT_SECRET = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+if (!CLIENT_ID || !CLIENT_SECRET) {
+    console.warn("Warning: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in env.");
+}
 
 
 function safeParseJson(s: string | undefined | null) {
@@ -56,228 +47,330 @@ function formatEmailHTML(text: string) {
 }
 
 
-/**
- * getUserGmailClient(context)
- * - context.gmailToken: { refresh_token, access_token?, expiry_date? }
- * - or context.headers['x-gmail-token'] (stringified JSON)
- * - or env SERVICE_GMAIL_TOKEN for dev (stringified JSON)
- */
-// async function getUserGmailClient(context: any = {}) {
-//     const maybeEnvToken = process.env.SERVICE_GMAIL_TOKEN ? safeParseJson(process.env.SERVICE_GMAIL_TOKEN) : null;
-//     const headerToken = context?.headers?.["x-gmail-token"] || context?.headers?.["x-gmail-token"];
+async function getUserGmailClient(config: any = {}) {
+    console.log("[getUserGmailClient] Retrieving Gmail client...");
 
-//     let userToken =
-//         context?.gmailToken ||
-//         (typeof headerToken === "string" ? safeParseJson(headerToken) : headerToken) ||
-//         context?.body?.gmailToken ||
-//         maybeEnvToken ||
-//         null;
+    let userToken = config?.configurable?.gmailToken;
 
-//     if (!userToken || !userToken.refresh_token) {
-//         throw new Error("User Gmail authorization required. Provide context.gmailToken.refresh_token or header 'x-gmail-token'.");
-//     }
+    if (!userToken || (!userToken.refresh_token && !userToken.access_token)) {
+        throw new Error("User Gmail authorization required.");
+    }
 
-//     const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
-//     oauth2Client.setCredentials({
-//         refresh_token: userToken.refresh_token,
-//         access_token: userToken.access_token,
-//         expiry_date: userToken.expiry_date,
-//     });
+    const oauth2Client = new google.auth.OAuth2(
+        process.env.GOOGLE_OAUTH_CLIENT_ID,
+        process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+        process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URL
+    );
 
-//     // google library will refresh automatically when needed
-//     return google.gmail({ version: "v1", auth: oauth2Client });
-// }
+    // ✅ Set credentials with refresh token
+    const credentials: any = {};
+    if (userToken.refresh_token) {
+        credentials.refresh_token = userToken.refresh_token;
+    }
+    if (userToken.access_token) {
+        credentials.access_token = userToken.access_token;
+    }
+    if (userToken.expiry_date) {
+        credentials.expiry_date = userToken.expiry_date;
+    }
 
-/* ------------------------
-   Nodemailer OAuth2 helper (optional)
-   ------------------------ */
-// async function createTransportWithOAuth2(userRecord: { refresh_token: any; email: any }) {
-//     if (!CLIENT_ID || !CLIENT_SECRET) {
-//         throw new Error("Missing GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET for OAuth2 SMTP transport.");
-//     }
+    oauth2Client.setCredentials(credentials);
 
-//     const oAuth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
-//     oAuth2Client.setCredentials({ refresh_token: userRecord.refresh_token });
+    // ✅ CRITICAL: Let googleapis handle token refresh automatically
+    // When the token expires, googleapis will use the refresh_token to get a new one
+    return google.gmail({ version: "v1", auth: oauth2Client });
+}
 
-//     const atRes: any = await oAuth2Client.getAccessToken();
-//     const accessToken = typeof atRes === "string" ? atRes : atRes?.token;
 
-//     if (!accessToken) throw new Error("Failed to obtain access token for SMTP transport.");
-
-//     const transporter = nodemailer.createTransport({
-//         service: "gmail",
-//         auth: {
-//             type: "OAuth2",
-//             user: userRecord.email,
-//             clientId: CLIENT_ID,
-//             clientSecret: CLIENT_SECRET,
-//             refreshToken: userRecord.refresh_token,
-//             accessToken,
-//         },
-//     });
-
-//     return transporter;
-// }
+export const generateEmailTool = tool(
+    async ({ subject, body, tone = "professional" }: any) => {
+        console.log(`[generate_email] subject="${subject}", tone="${tone}"`);
+        return {
+            status: "ready",
+            message: "Email draft generated",
+            draft: {
+                subject: subject || "Untitled",
+                body: body || "Your email body here"
+            },
+            tone
+        };
+    },
+    {
+        name: "generate_email",
+        description: "Generate a professional email draft for the user.",
+        schema: z.object({
+            subject: z.string()
+                .describe("Email subject line")
+                .min(1),
+            body: z.string()
+                .describe("Email body content")
+                .min(1),
+            tone: z.string()
+                .describe("Email tone: professional, casual, formal, or friendly")
+                .optional()
+                .default("professional"),
+        }),
+    }
+);
 
 
 export const askForInfoTool = tool(
-    async ({ info_needed }: any) => {
+    async ({ info_type }: any) => {
+        console.log(`[ask_for_info] info_type="${info_type}"`);
         return {
             action: "ask_user",
-            needs: info_needed,
+            needs: info_type,
             waiting: true,
         };
     },
     {
         name: "ask_for_info",
-        description: "Ask the user for missing information needed for the email.",
-        schema: z.object({ info_needed: z.string() }),
+        description: "Ask user for additional information needed to complete the task.",
+        schema: z.object({
+            info_type: z.string()
+                .describe("Type of info needed like 'recipient email', 'subject', 'body'")
+                .min(1),
+        }),
     }
 );
 
 
-// export const readEmailsTool = tool(
-//     async ({ query = "is:unread", maxResults = 10 }: any, context: any = {}) => {
-//         try {
-//             const gmail = await getUserGmailClient(context);
+export const readEmailsTool = tool(
+    async ({ query = "is:unread", maxResults = 5 }: any, config: any = {}) => {
+        try {
+            console.log(`[read_emails] query="${query}", maxResults=${maxResults}`);
+            console.log(`[read_emails] config received:`, config?.configurable ? "✓ Yes" : "✗ No");
 
-//             const response = await gmail.users.messages.list({ userId: "me", q: query, maxResults });
+            // ✅ Pass config (not context) to getUserGmailClient
+            const gmail = await getUserGmailClient(config);
 
-//             if (!response.data.messages || response.data.messages.length === 0) {
-//                 return { emails: [], count: 0, message: "No emails found" };
-//             }
+            const safeQuery = (typeof query === "string" && query.trim().length > 0)
+                ? query
+                : "in:inbox";
 
-//             const messages = response.data.messages.slice(0, Math.min(5, response.data.messages.length));
+            const response = await gmail.users.messages.list({
+                userId: "me",
+                q: safeQuery,
+                maxResults
+            });
 
-//             const emails = await Promise.all(
-//                 messages.map(async (msg: any) => {
-//                     const fullMsg = await gmail.users.messages.get({ userId: "me", id: msg.id, format: "metadata", metadataHeaders: ["From", "To", "Subject", "Date"] });
-//                     const headers: any[] = fullMsg.data.payload?.headers || [];
-//                     const getHeader = (name: string) => headers.find((h: any) => h.name === name)?.value || "Unknown";
+            if (!response.data.messages || response.data.messages.length === 0) {
+                return {
+                    emails: [],
+                    count: 0,
+                    message: "No emails found"
+                };
+            }
 
-//                     return {
-//                         id: msg.id,
-//                         from: String(getHeader("From")).split("<")[0].trim(),
-//                         to: String(getHeader("To")).split("<")[0].trim(),
-//                         subject: getHeader("Subject"),
-//                         date: getHeader("Date"),
-//                         snippet: fullMsg.data.snippet || "",
-//                     };
-//                 })
-//             );
+            const messages = response.data.messages.slice(0, Math.min(5, response.data.messages.length));
 
-//             return { emails, count: emails.length, total: response.data.resultSizeEstimate, message: `Found ${emails.length} matching emails` };
-//         } catch (err: any) {
-//             console.error("Read emails error:", err);
-//             return { error: `Failed to read emails: ${err?.message || String(err)}`, emails: [], suggestion: "Please ensure Gmail authorization is active and tokens are valid." };
-//         }
-//     },
-//     {
-//         name: "read_emails",
-//         description: "Read recent emails from your Gmail inbox.",
-//         schema: z.object({ query: z.string().optional(), maxResults: z.number().optional() }),
-//     }
-// );
+            const emails = await Promise.all(
+                messages.map(async (msg: any) => {
+                    const fullMsg = await gmail.users.messages.get({
+                        userId: "me",
+                        id: msg.id,
+                        format: "metadata",
+                        metadataHeaders: ["From", "To", "Subject", "Date"]
+                    });
+                    const headers: any[] = fullMsg.data.payload?.headers || [];
+                    const getHeader = (name: string) =>
+                        headers.find((h: any) => h.name === name)?.value || "Unknown";
 
+                    return {
+                        id: msg.id,
+                        from: String(getHeader("From")).split("<")[0].trim(),
+                        to: String(getHeader("To")).split("<")[0].trim(),
+                        subject: getHeader("Subject"),
+                        date: getHeader("Date"),
+                        snippet: fullMsg.data.snippet || "",
+                    };
+                })
+            );
 
-export const generateEmailTool = tool(
-    async ({ user_request, tone, email_type }: any) => {
-        // Placeholder: replace with LLM-based generation
-        const subject = (user_request || "").slice(0, 80) || "No Subject";
-        const body = `Hello,\n\n${user_request}\n\nBest regards,`;
-        return { status: "ready", message: "Draft generated.", draft: { subject, body }, tone, email_type };
+            return {
+                emails,
+                count: emails.length,
+                total: response.data.resultSizeEstimate,
+                message: `Found ${emails.length} matching emails`
+            };
+        } catch (err: any) {
+            console.error("Read emails error:", err);
+            return {
+                error: true,
+                errorMessage: err?.message || String(err),
+                suggestion: "Ensure Gmail token is provided and valid."
+            };
+        }
     },
     {
-        name: "generate_email",
-        description: "Generate a professional email draft.",
-        schema: z.object({ user_request: z.string(), tone: z.string().optional(), email_type: z.string().optional() }),
+        name: "read_emails",
+        description: "Read recent emails from Gmail inbox. Fetch unread messages or search inbox.",
+        schema: z.object({
+            query: z.string()
+                .describe("Gmail search query like 'is:unread', 'from:user@example.com'")
+                .optional()
+                .default("is:unread"),
+            maxResults: z.number()
+                .describe("Max emails to return (1-10)")
+                .optional()
+                .default(5),
+        }),
     }
 );
 
 
-// export const sendEmailTool = tool(
-//     async ({ subject, body, recipient_email }: any, context: any = {}) => {
-//         try {
-//             const validation = validateEmail(recipient_email);
-//             if (!validation.valid) return { success: false, error: `Invalid recipient: ${validation.error}` };
+export const sendEmailTool = tool(
+    async ({ to, subject, body }: any, config: any = {}) => {
+        try {
+            const validation = validateEmail(to);
+            if (!validation.valid) {
+                return {
+                    success: false,
+                    error: `Invalid recipient: ${validation.error}`
+                };
+            }
 
-//             const gmail = await getUserGmailClient(context);
+            const gmail = await getUserGmailClient(config); // ✅ Pass config
 
-//             // resolve sender email (prefer context.user.email if provided)
-//             let fromEmail = context?.user?.email || context?.headers?.["x-user-email"] || null;
-//             if (!fromEmail) {
-//                 // try to fetch profile via oauth2 (safe-guard)
-//                 try {
-//                     const oauth2 = google.oauth2({ auth: (gmail as any).auth, version: "v2" });
-//                     const profile = await oauth2.userinfo.get();
-//                     fromEmail = profile?.data?.email || fromEmail;
-//                 } catch (e) {
-//                     // ignore: we'll fallback to 'me'
-//                 }
-//             }
+            let fromEmail = config?.configurable?.user?.email || null;
 
-//             const finalFrom = fromEmail || "me";
+            if (!fromEmail) {
+                try {
+                    const oauth2 = google.oauth2({ auth: (gmail as any).auth, version: "v2" });
+                    const profile = await oauth2.userinfo.get();
+                    fromEmail = profile?.data?.email || fromEmail;
+                } catch (e) {
+                    // fallback
+                }
+            }
 
-//             let finalBody = body ?? "";
-//             if (!/Best regards|Sincerely|Regards/.test(finalBody)) finalBody += "\n\nBest regards";
-//             const html = formatEmailHTML(finalBody);
+            const finalFrom = fromEmail || "me";
+            let finalBody = body ?? "";
+            if (!/Best regards|Sincerely|Regards/.test(finalBody)) {
+                finalBody += "\n\nBest regards";
+            }
 
-//             const rawMessage = [
-//                 `From: ${finalFrom}`,
-//                 `To: ${recipient_email}`,
-//                 `Subject: ${subject}`,
-//                 `MIME-Version: 1.0`,
-//                 `Content-Type: text/html; charset=UTF-8`,
-//                 "",
-//                 html,
-//             ].join("\r\n");
+            const html = formatEmailHTML(finalBody);
+            const rawMessage = [
+                `From: ${finalFrom}`,
+                `To: ${to}`,
+                `Subject: ${subject}`,
+                `MIME-Version: 1.0`,
+                `Content-Type: text/html; charset=UTF-8`,
+                "",
+                html,
+            ].join("\r\n");
 
-//             const raw = base64UrlEncode(rawMessage);
+            const raw = base64UrlEncode(rawMessage);
+            const sendRes = await gmail.users.messages.send({
+                userId: "me",
+                requestBody: { raw }
+            });
 
-//             const sendRes = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+            return {
+                success: true,
+                message: `Email sent to ${to}`,
+                recipient: to,
+                subject,
+                messageId: sendRes.data.id,
+                threadId: sendRes.data.threadId
+            };
+        } catch (err: any) {
+            console.error("Send email error:", err);
+            return {
+                success: false,
+                error: err?.message || String(err)
+            };
+        }
+    },
+    {
+        name: "send_email",
+        description: "Send an email from the user's Gmail account.",
+        schema: z.object({
+            to: z.string()
+                .describe("Recipient email address"),
+            subject: z.string()
+                .describe("Email subject line")
+                .min(1),
+            body: z.string()
+                .describe("Email body content")
+                .min(1),
+        }),
+    }
+);
 
-//             return { success: true, message: `Email sent to ${recipient_email}`, recipient: recipient_email, subject, messageId: sendRes.data.id, threadId: sendRes.data.threadId };
-//         } catch (err: any) {
-//             console.error("Send email error:", err);
-//             const isAuthError = String(err?.message || "").includes("invalid_grant") || String(err?.message || "").includes("invalid_request");
-//             return { success: false, error: err?.message || String(err), user_message: isAuthError ? "Authorization failed. Please re-authorize Gmail access." : "Failed to send email.", suggest_reauth: isAuthError };
-//         }
-//     },
-//     {
-//         name: "send_email",
-//         description: "Send an email from the logged-in user's Gmail via the Gmail API (requires user's refresh_token in context).",
-//         schema: z.object({ subject: z.string().min(1), body: z.string().min(1), recipient_email: z.string().min(5) }),
-//     }
-// );
 
+export const searchEmailsTool = tool(
+    async ({ query }: any, config: any = {}) => {
+        try {
+            if (!query || query.trim().length === 0) {
+                return {
+                    error: "Search query required",
+                    emails: []
+                };
+            }
 
-// export const searchEmailsTool = tool(
-//     async ({ query }: any, context: any = {}) => {
-//         try {
-//             const gmail = await getUserGmailClient(context);
-//             const response = await gmail.users.messages.list({ userId: "me", q: query, maxResults: 10 });
+            console.log(`[search_emails] query="${query}"`);
+            const gmail = await getUserGmailClient(config); // ✅ Pass config
 
-//             if (!response.data.messages || response.data.messages.length === 0) return { emails: [], count: 0, message: `No emails found matching "${query}"` };
+            const response = await gmail.users.messages.list({
+                userId: "me",
+                q: query,
+                maxResults: 10
+            });
 
-//             const messages = response.data.messages.slice(0, Math.min(5, response.data.messages.length));
+            if (!response.data.messages || response.data.messages.length === 0) {
+                return {
+                    emails: [],
+                    count: 0,
+                    message: `No emails found matching "${query}"`
+                };
+            }
 
-//             const emails = await Promise.all(
-//                 messages.map(async (msg: any) => {
-//                     const fullMsg = await gmail.users.messages.get({ userId: "me", id: msg.id, format: "metadata", metadataHeaders: ["From", "Subject"] });
-//                     const headers: any[] = fullMsg.data.payload?.headers || [];
-//                     const fromHeader = headers.find((h: any) => h.name === "From");
-//                     const subjectHeader = headers.find((h: any) => h.name === "Subject");
-//                     const from = fromHeader?.value || "Unknown";
-//                     const subject = subjectHeader?.value || "(No Subject)";
-//                     return { id: msg.id, from: String(from).split("<")[0].trim(), subject, snippet: fullMsg.data.snippet || "" };
-//                 })
-//             );
+            const messages = response.data.messages.slice(0, Math.min(5, response.data.messages.length));
 
-//             return { emails, count: emails.length, total: response.data.resultSizeEstimate, query };
-//         } catch (err: any) {
-//             console.error("Search emails error:", err);
-//             return { error: `Search failed: ${err?.message || String(err)}`, emails: [], suggestion: "Check Gmail authorization" };
-//         }
-//     },
-//     { name: "search_emails", description: "Search your Gmail for specific emails.", schema: z.object({ query: z.string() }) }
-// );
+            const emails = await Promise.all(
+                messages.map(async (msg: any) => {
+                    const fullMsg = await gmail.users.messages.get({
+                        userId: "me",
+                        id: msg.id,
+                        format: "metadata",
+                        metadataHeaders: ["From", "Subject"]
+                    });
+                    const headers: any[] = fullMsg.data.payload?.headers || [];
+                    const from = headers.find((h: any) => h.name === "From")?.value || "Unknown";
+                    const subject = headers.find((h: any) => h.name === "Subject")?.value || "(No Subject)";
+
+                    return {
+                        id: msg.id,
+                        from: String(from).split("<")[0].trim(),
+                        subject,
+                        snippet: fullMsg.data.snippet || ""
+                    };
+                })
+            );
+
+            return {
+                emails,
+                count: emails.length,
+                total: response.data.resultSizeEstimate,
+                query
+            };
+        } catch (err: any) {
+            console.error("Search emails error:", err);
+            return {
+                error: `Search failed: ${err?.message || String(err)}`,
+                emails: []
+            };
+        }
+    },
+    {
+        name: "search_emails",
+        description: "Search Gmail for emails by sender, subject, date, or keywords.",
+        schema: z.object({
+            query: z.string()
+                .describe("Gmail search query like 'from:alice@example.com'")
+                .min(1),
+        }),
+    }
+);

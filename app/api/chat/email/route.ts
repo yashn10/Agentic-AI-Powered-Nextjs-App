@@ -1,24 +1,25 @@
-// app/api/chat/email/route.ts
+// app/api/chat/email/route.ts - FIXED
 import { NextResponse } from "next/server";
 import { getEmailAgent } from "@/lib/agents/emailAgent";
 
 
 export async function POST(req: Request) {
     try {
-        // ✅ Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user) {
-        //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        // }
+        const gmailTokenStr = req.headers.get("x-gmail-token");
+        if (!gmailTokenStr) {
+            return NextResponse.json(
+                { error: "Gmail not connected. Please sign in with Google." },
+                { status: 401 }
+            );
+        }
 
-        // ✅ Check Gmail token exists
-        // const gmailToken = (session.user as any)?.gmailToken;
-        // if (!gmailToken?.access_token) {
-        //     return NextResponse.json(
-        //         { error: "Gmail not connected. Please sign in with Google." },
-        //         { status: 401 }
-        //     );
-        // }
+        // ✅ Parse the token object
+        let gmailToken;
+        try {
+            gmailToken = JSON.parse(gmailTokenStr);
+        } catch {
+            gmailToken = { access_token: gmailTokenStr };
+        }
 
         const body = await req.json();
         const messages = Array.isArray(body?.messages) ? body.messages : [];
@@ -27,29 +28,24 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "messages array required" }, { status: 400 });
         }
 
-        const lastUser = messages[messages.length - 1];
-        const userQuery = String(lastUser?.content ?? "").trim();
-
+        const userQuery = String(messages[messages.length - 1]?.content ?? "").trim();
         if (!userQuery) {
             return NextResponse.json({ error: "empty query" }, { status: 400 });
         }
 
         console.log("[Email Agent] User query:", userQuery);
+        console.log("[Email Agent] Token has refresh_token:", gmailToken?.refresh_token ? "✓ Yes" : "✗ No");
 
         const agent = await getEmailAgent();
 
-        let result: any;
-        try {
-            result = await agent.invoke({
-                messages: [{ role: "user", content: userQuery }],
-            });
-        } catch (err) {
-            console.error("[Email Agent] Error:", err);
-            return NextResponse.json(
-                { error: "agent execution failed", detail: String(err) },
-                { status: 500 }
-            );
-        }
+        const result = await agent.invoke(
+            { messages: [{ role: "user", content: userQuery }] },
+            {
+                configurable: {
+                    gmailToken, // ✅ Pass full token object
+                },
+            }
+        );
 
         const response = result.messages[result.messages.length - 1]?.content || "No response";
 
