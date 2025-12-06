@@ -36,3 +36,17 @@ export async function searchTavilyNews(query: string) {
         throw err;
     }
 }
+
+
+export async function searchNewsApi(query: string) {
+    try {
+        const response = await axios.get(
+            `https://newsapi.org/v2/top-headlines?country=us&category=business&apiKey=${process.env.NEWS_API_KEY}`,
+        );
+
+        return response;
+    } catch (err) {
+        console.error("[DuckDuckGo] Search error:", err);
+        throw err;
+    }
+}

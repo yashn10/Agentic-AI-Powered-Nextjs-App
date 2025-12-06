@@ -69,7 +69,7 @@ Format your response as a valid JSON array ONLY (no markdown, no extra text):
     {
         name: "generate_questions",
         description:
-            "Generate interview practice questions for a specific role",
+            "Generate interview practice questions for a specific role. Use ONLY when starting new interview.",
         schema: z.object({
             role: z.string().describe("Job position/role (e.g., 'Senior Backend Engineer')"),
             company: z.string().optional().describe("Company name (optional)"),
@@ -135,7 +135,7 @@ Provide feedback in JSON format ONLY (no markdown):
     },
     {
         name: "analyze_response",
-        description: "Analyze and provide feedback on an interview answer",
+        description: "Analyze a candidate's answer and give feedback. Use ONLY when asked 'feedback' or 'how did I do?'",
         schema: z.object({
             question: z.string().describe("The interview question asked"),
             answer: z.string().describe("The user's answer to analyze"),

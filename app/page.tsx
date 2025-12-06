@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Signin from './auth/signin';
 import Logout from './auth/logout';
 import userContext from '@/components/userContext';
+import { useRouter } from 'next/navigation';
 
 
 const containerVariants: Variants = {
@@ -56,6 +57,7 @@ const staggerChildren: Variants = {
 
 export default function HomePage() {
 
+  const router = useRouter();
   const [isUserSignedIn, setIsUserSignedIn] = useState(false);
   const [openDialogue, setOpenDialogue] = useState(false);
   const [openOutDialogue, setOpenOutDialogue] = useState(false);
@@ -136,32 +138,17 @@ export default function HomePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/dashboard">
-                <Button size="lg" className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-6 rounded-lg shadow-lg font-semibold text-lg transform hover:scale-105 transition-transform">
+                <Button size="lg" className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-10 py-6 rounded-lg shadow-lg font-semibold text-lg transform hover:scale-105 transition-transform cursor-pointer">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button variant="outline" size="lg" className="px-10 py-6 rounded-lg border-gray-300 font-semibold text-lg hover:bg-gray-50 transition-colors">
+              <Button variant="outline" size="lg" className="px-10 py-6 rounded-lg border-gray-300 font-semibold text-lg hover:bg-gray-50 transition-colors cursor-pointer">
                 View Pricing
               </Button>
             </div>
           </motion.div>
         </div>
-        {/* Subtle Floating Orbs for Depth */}
-        <motion.div
-          className="absolute top-1/4 right-12 hidden xl:block"
-          animate={{ y: [0, -40, 0], opacity: [0.8, 1, 0.8] }}
-          transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <div className="w-24 h-24 bg-linear-to-r from-indigo-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
-        </motion.div>
-        <motion.div
-          className="absolute bottom-1/4 left-12 hidden xl:block"
-          animate={{ y: [0, 40, 0], opacity: [0.8, 1, 0.8] }}
-          transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <div className="w-20 h-20 bg-linear-to-r from-gray-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
-        </motion.div>
       </section>
 
       {/* How It Works Section - Clean, Card-Based Layout */}
@@ -226,7 +213,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-indigo-50 transition-colors font-medium text-indigo-600">
+                  <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full justify-start text-left hover:bg-indigo-50 transition-colors font-medium text-indigo-600 cursor-pointer">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -246,7 +233,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-emerald-50 transition-colors font-medium text-emerald-600">
+                  <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full justify-start text-left hover:bg-emerald-50 transition-colors font-medium text-emerald-600 cursor-pointer">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -266,7 +253,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-amber-50 transition-colors font-medium text-amber-600">
+                  <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full justify-start text-left hover:bg-amber-50 transition-colors font-medium text-amber-600 cursor-pointer">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -286,7 +273,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button variant="ghost" className="w-full justify-start text-left hover:bg-rose-50 transition-colors font-medium text-rose-600">
+                  <Button variant="ghost" onClick={() => router.push('/dashboard')} className="w-full justify-start text-left hover:bg-rose-50 transition-colors font-medium text-rose-600 cursor-pointer">
                     Launch Agent <ArrowRight className="ml-auto h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </CardContent>
@@ -403,11 +390,11 @@ export default function HomePage() {
               Start with our free tier and experience the power of autonomous agents. No credit card required—cancel anytime.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-gray-900 hover:bg-gray-100 px-10 py-6 rounded-lg shadow-xl font-semibold text-lg transform hover:scale-105 transition-transform">
+              <Button size="lg" onClick={() => router.push('/chat/personalAgent')} className="bg-white text-gray-900 hover:bg-gray-100 px-10 py-6 rounded-lg shadow-xl font-semibold text-lg transform hover:scale-105 transition-transform cursor-pointer">
                 Create Your First Agent
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button variant="outline" size="lg" className="px-10 py-6 text-white rounded-lg border-white/40 hover:bg-white/10 font-semibold text-lg transition-colors">
+              <Button variant="outline" size="lg" className="bg-white text-gray-900 hover:bg-gray-100 px-10 py-6 rounded-lg shadow-xl font-semibold text-lg transform hover:scale-105 transition-transform cursor-pointer">
                 <PhoneCall className="mr-2 h-5 w-5" /> Book a Demo Call
               </Button>
             </div>

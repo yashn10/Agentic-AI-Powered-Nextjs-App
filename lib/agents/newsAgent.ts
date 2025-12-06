@@ -41,31 +41,19 @@ export async function getNewsAgent(userQuery: string) {
     } else {
         try {
             const response = await searchTavilyNews(userQuery);
-
             if (response?.results && Array.isArray(response.results) && response.results.length > 0) {
-                const results = response.results.slice(0, 3);
-
-                // ✅ Store news items with URLs for later use
-                newsItems = results.map((item: any) => {
-                    const title = item.title || "Untitled";
-                    const description = item.content ||
-                        item.snippet ||
-                        item.description ||
-                        "No description";
-                    const url = item.url || "";
-                    const source = item.source ||
-                        (url ? new URL(url).hostname : "Unknown");
-
-                    return { title, url, source, description };
-                });
-
-                // Format for LLM
+                newsItems = response.results.slice(0, 5).map((item: any) => ({
+                    title: item.title || "Untitled",
+                    url: item.url || "",
+                    source: item.source || new URL(item.url).hostname,
+                    description: item.content || item.snippet || item.description || "No description",
+                    content: item.content || ""  // Store full content for details
+                }));
                 newsContent = newsItems
                     .map((item, idx) =>
-                        `${idx + 1}. **${item.title}** (${item.source})\n   ${item.description}\n   Source: ${item.url}`
+                        `${idx + 1}. **${item.title}** (${item.source})\n${item.description}\n`
                     )
                     .join("\n\n");
-
             }
         } catch (err) {
             console.error("[newsAgent] News fetch error:", err);
@@ -73,47 +61,56 @@ export async function getNewsAgent(userQuery: string) {
         }
     }
 
-    // Create agent with news already loaded
     const agent = createAgent({
         model: llm,
-        tools: [],
+        tools: [], // Keep empty - no tools needed for analysis
         systemPrompt: `
-You are NewsForge — an expert AI news analyst.
+You are NewsForge — a professional news analyst.
 
-Your task: Analyze the provided news data and respond with ONLY valid JSON.
+**MANDATORY: Analyze conversation history and user intent, then respond in EXACT format below.**
 
-IMPORTANT: 
-- If the news data looks empty or generic, respond with the suggestion format
-- Otherwise, analyze and summarize the key news points
-- Include source URLs in your analysis
+**INTENT DETECTION** (check LAST user message + conversation context):
+SUMMARY REQUESTS (respond with type: "summary"):
+- "top news", "latest", "headlines", "today's news", "what's happening"
+- First message about news topics
 
-Respond with ONLY valid JSON in this format (no other text):
+DETAILED REQUESTS (respond with type: "detailed"):  
+- "tell me more", "explain", "details", "in depth", "background", "why", "how"
+- References specific articles: "#1", "#2", "IndiGo", "Putin", etc.
+- Follow-up questions about news topics
+
+**RESPONSE FORMAT - ALWAYS use this EXACT structure:**
+
+Summary requests:
 {
-  "summary": "5-10 sentence summary of the key news points",
-  "sentiment": "positive or negative or neutral",
-  "sources": [
-    {
-      "title": "Article title",
-      "url": "https://example.com",
-      "source": "example.com"
-    }
-  ]
+  "type": "summary",
+  "data": {
+    "summary": "3-5 sentences covering main stories",
+    "sentiment": "positive|negative|neutral", 
+    "sources": [{"title": "...", "url": "...", "source": "..."}]
+  }
 }
 
-Rules:
-- Respond with ONLY the JSON object, no markdown or explanations
-- Summary should be 5-10 sentences, clear and informative
-- Sentiment must be: positive, negative, or neutral
-- Include 5-10 most relevant sources from the news data
-- Each source must have title, url, and source fields
+Detail requests:
+{
+  "type": "detailed", 
+  "content": "Detailed explanation/analysis (3-8 paragraphs)"
+}
 
-News data to analyze:
+**RULES:**
+1. NO OTHER TEXT - ONLY valid JSON object above
+2. Check conversation HISTORY for context/follow-ups  
+3. Use news articles below for all analysis
+4. Sources must include title/url/source for ALL articles referenced
+
+Available news articles:
 ${newsContent}
-        `.trim(),
+`.trim(),
     });
 
-    // ✅ Attach news items to agent for later retrieval
-    (agent as any).__newsItems = newsItems;
+    // Store full news context for conversation
+    (agent as any).__newsContext = { newsItems, newsContent };
+    (agent as any).__conversationState = "initial";
 
     return agent;
 }

@@ -32,6 +32,16 @@ type NewsSource = {
   source: string;
 };
 
+type NewsResponse = {
+  type: 'summary' | 'detailed';
+  data?: {
+    summary: string;
+    sentiment: string;
+    sources: NewsSource[];
+  };
+  content?: string;
+};
+
 type ChatMsg = {
   id: string;
   role: 'user' | 'assistant';
@@ -40,6 +50,7 @@ type ChatMsg = {
   metadata?: {
     sentiment?: string;
     sources?: NewsSource[];
+    newsResponse?: NewsResponse;  // ✅ NEW: Store full response
   };
 };
 
@@ -291,19 +302,26 @@ export default function ChatPage() {
       }
 
       const json = await res.json();
-      console.log("API response:", json);
 
       let assistantMsg: ChatMsg;
 
       if (agentId === 'news' && json.assistant) {
+        const assistant = json.assistant;
+        const isSummary = assistant.data.type === 'summary';
+
         assistantMsg = {
           id: `a-${Date.now()}`,
           role: "assistant",
-          content: json.assistant.summary || "No summary available",
+          content: isSummary
+            ? (assistant.data?.data.summary || assistant.data.data.content || "No summary available")
+            : (assistant.data.content || "No response"),
           createdAt: Date.now(),
-          metadata: {
-            sentiment: json.assistant.sentiment || "neutral",
-            sources: json.assistant.sources || []
+          metadata: isSummary ? {
+            newsResponse: assistant,
+            sentiment: assistant.data?.data.sentiment,
+            sources: assistant.data?.data.sources
+          } : {
+            newsResponse: assistant  // Still store for detailed view
           }
         };
       } else if (agentId === 'interview') {
@@ -352,59 +370,115 @@ export default function ChatPage() {
 
   // ✅ Render news messages with sentiment and sources
   const renderNewsMessage = (msg: ChatMsg) => {
-    const sentiment = msg.metadata?.sentiment || "neutral";
-    const sources = msg.metadata?.sources || [];
+    const newsResponse = msg.metadata?.newsResponse;
 
+    // ✅ IMPROVED: Check for explanation keywords OR short content
+    const lastUserMsg = messages[messages.length - 2]?.content?.toLowerCase() || '';
+    const isExplanationRequest = lastUserMsg.includes('explain') ||
+      lastUserMsg.includes('tell me more') ||
+      lastUserMsg.includes('details') ||
+      lastUserMsg.includes('why') ||
+      lastUserMsg.includes('how') ||
+      msg.content.length < 200; // Short responses likely need expansion
+
+    const forceDetailed = isExplanationRequest;
+
+    const sentiment = newsResponse?.data?.sentiment || msg.metadata?.sentiment || "neutral";
+    const sources = newsResponse?.data?.sources || msg.metadata?.sources || [];
+    const summaryText = newsResponse?.data?.summary || msg.content;
+
+    if (forceDetailed) {
+      // ✅ Show detailed view for explanation requests
+      return (
+        <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
+          <div className="px-6 py-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                <span className="font-semibold text-lg bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full">
+                  Detailed Analysis
+                </span>
+              </div>
+              <Button size="sm" variant="ghost" onClick={() => copyToClipboard(msg.content)}>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="prose prose-lg max-w-none text-slate-800">
+              {msg.content.split('\n').filter(line => line.trim()).map((line, i) => (
+                <p key={i} className="mb-3 leading-relaxed">{line}</p>
+              ))}
+            </div>
+
+            {/* Show sources in detailed view too */}
+            {sources.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-amber-200">
+                <h5 className="font-medium text-amber-900 mb-3 flex items-center gap-2">
+                  📚 References
+                </h5>
+                <div className="grid grid-cols-1 gap-2">
+                  {sources.map((source: NewsSource, idx: number) => (
+                    <a key={idx} href={source.url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 p-2 bg-white rounded-lg border border-amber-200 hover:bg-amber-50 text-sm">
+                      <ExternalLink className="h-3 w-3" />
+                      <span className="truncate max-w-[200px]">{source.title}</span>
+                      <span className="text-xs text-amber-600">→ {source.source}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      );
+    }
+
+    // Summary view (default)
     const sentimentColors: Record<string, string> = {
-      positive: 'bg-green-100 text-green-800',
-      negative: 'bg-red-100 text-red-800',
-      neutral: 'bg-slate-100 text-slate-800'
+      positive: 'bg-green-100 text-green-800 border-green-200',
+      negative: 'bg-red-100 text-red-800 border-red-200',
+      neutral: 'bg-slate-100 text-slate-800 border-slate-200'
     };
 
     return (
-
       <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
         <div className="px-6">
-          {/* Header with sentiment */}
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-lg text-slate-900">News Summary</h3>
-              <Badge className={`mt-2 ${sentimentColors[sentiment]}`}>
-                {sentiment.toUpperCase()} Sentiment
+              <h3 className="font-semibold text-lg text-slate-900 mb-1">📰 News Summary</h3>
+              <Badge className={`px-3 py-1 ${sentimentColors[sentiment]}`}>
+                {sentiment.toUpperCase()} {sentimentColors[sentiment].includes('green') ? '📈' : sentimentColors[sentiment].includes('red') ? '📉' : '➡️'}
               </Badge>
             </div>
-            <Button size="sm" variant="ghost" className='cursor-pointer' onClick={() => copyToClipboard(msg.content)}>
+            <Button size="sm" variant="ghost" onClick={() => copyToClipboard(summaryText || '')} className='cursor-pointer'>
               <Copy className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Summary text */}
-          <div className="mb-6">
-            <p className="text-slate-700 leading-relaxed text-base">{msg.content}</p>
+          <div className="mb-6 p-4 bg-linear-to-r from-slate-50 to-indigo-50 rounded-xl">
+            <p className="text-slate-800 leading-relaxed text-base">{summaryText}</p>
           </div>
 
-          {/* Sources section */}
-          {sources && sources.length > 0 && (
+          {sources.length > 0 && (
             <div className="border-t border-slate-200 pt-4">
-              <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <span>📚</span> Sources
+              <h4 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                📚 Sources ({sources.length})
               </h4>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3">
                 {sources.map((source: NewsSource, idx: number) => (
                   <a
                     key={idx}
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group block p-3 bg-slate-50 hover:bg-indigo-50 rounded-lg border border-slate-200 hover:border-indigo-300 transition-all"
+                    className="group block p-4 bg-slate-50 hover:bg-indigo-50 rounded-xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all duration-200 hover:-translate-y-1"
                   >
                     <div className="flex items-start gap-3">
-                      <div className="text-lg shrink-0">🔗</div>
+                      <div className="text-xl shrink-0 mt-0.5 text-indigo-500">🔗</div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 text-sm group-hover:text-indigo-600 transition-colors line-clamp-2">
+                        <p className="font-semibold text-slate-900 text-sm group-hover:text-indigo-700 transition-colors line-clamp-2 leading-tight">
                           {source.title}
                         </p>
-                        <p className="text-xs text-slate-500 truncate mt-1">
+                        <p className="text-xs text-slate-500 font-medium truncate mt-1 bg-slate-100/50 px-2 py-0.5 rounded-full inline-block group-hover:bg-indigo-100">
                           {source.source}
                         </p>
                       </div>
@@ -417,7 +491,6 @@ export default function ChatPage() {
           )}
         </div>
       </Card>
-
     );
   };
 
@@ -449,7 +522,7 @@ export default function ChatPage() {
     return (
       <Card className="bg-white/90 backdrop-blur border-0 shadow-md overflow-hidden">
         <div className="px-6">
-          {parsed.text ? <p className="text-slate-700 mb-4">{parsed.text}</p> : null}
+          {/* {parsed.text ? <p className="text-slate-700 mb-4">{parsed.text}</p> : null} */}
 
           {parsed.type === "questions" && Array.isArray(parsed.data) && (
             <div className="space-y-4">
@@ -621,7 +694,7 @@ export default function ChatPage() {
 
                     <div className={`max-w-2xl space-y-3 ${msg.role === 'user' ? 'text-right' : ''}`}>
                       {msg.role === 'assistant' ? (
-                        agentId === 'news' && msg.metadata?.sentiment ? (
+                        agentId === 'news' ? (
                           renderNewsMessage(msg)
                         ) : agentId === 'interview' ? (
                           renderInterviewMessage(msg)

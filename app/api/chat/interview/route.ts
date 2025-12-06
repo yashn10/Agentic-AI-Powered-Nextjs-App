@@ -1,18 +1,10 @@
 // app/api/chat/interview/route.ts
 import { NextResponse } from "next/server";
 import { getInterviewAgent } from "@/lib/agents/interviewAgent";
-// import { getServerSession } from "next-auth/next";
-// import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 
 export async function POST(req: Request) {
     try {
-        // ✅ Check authentication
-        // const session = await getServerSession(authOptions);
-        // if (!session?.user) {
-        //     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        // }
-
         const body = await req.json();
         const messages = Array.isArray(body?.messages) ? body.messages : [];
 

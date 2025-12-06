@@ -5,7 +5,7 @@ import { getNewsAgent } from "../../../../lib/agents/newsAgent";
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json().catch(() => ({}));
+        const body = await req.json();
         const messages = Array.isArray(body?.messages) ? body.messages : [];
 
         if (!messages.length) {
@@ -15,58 +15,53 @@ export async function POST(req: Request) {
         const lastUser = messages[messages.length - 1];
         const userQuery = String(lastUser?.content ?? "").trim();
 
-        if (!userQuery) {
-            return NextResponse.json({ error: "empty query" }, { status: 400 });
-        }
-
+        // ✅ PASS FULL CONVERSATION HISTORY
         const agent = await getNewsAgent(userQuery);
 
         let result: any;
         try {
             result = await agent.invoke({
-                messages: [{ role: "user", content: userQuery }],
+                messages: messages.map((m: any) => ({
+                    role: m.role,
+                    content: m.content,
+                })),
             });
         } catch (err) {
-            console.error("[API] Agent execution error:", err);
+            console.error("[News Agent] Error:", err);
             return NextResponse.json(
                 { error: "agent execution failed", detail: String(err) },
                 { status: 500 }
             );
         }
 
-        // Extract JSON from last message
-        let structuredResponse = {
-            summary: "Unable to process your request",
-            sentiment: "neutral",
-            sources: []
-        };
+        const lastMessage = result.messages[result.messages.length - 1];
+        let response = lastMessage?.content || "No response";
 
-        try {
-            const lastMessage = result.messages[result.messages.length - 1];
-
-            if (lastMessage?.content) {
-
-                // Find JSON in response
-                const jsonMatch = lastMessage.content.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    structuredResponse = {
-                        summary: parsed.summary || "No summary available",
-                        sentiment: parsed.sentiment || "neutral",
-                        sources: Array.isArray(parsed.sources) ? parsed.sources : []
-                    };
-                }
+        // ✅ Detect JSON vs detailed response
+        const jsonMatch = response.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+        if (jsonMatch) {
+            try {
+                const parsed = JSON.parse(jsonMatch[0]);
+                response = {
+                    type: "summary",
+                    data: parsed
+                };
+            } catch (e) {
+                // Not valid JSON, treat as text
             }
-        } catch (parseErr) {
-            console.error("[API] JSON parse error:", parseErr);
+        } else {
+            response = {
+                type: "detailed",
+                content: response
+            };
         }
 
         return NextResponse.json({
-            assistant: structuredResponse,
+            assistant: response,
         });
 
     } catch (err) {
-        console.error("[API] Route error:", err);
+        console.error("[News Agent] Route error:", err);
         return NextResponse.json(
             { error: "internal server error", detail: String(err) },
             { status: 500 }
