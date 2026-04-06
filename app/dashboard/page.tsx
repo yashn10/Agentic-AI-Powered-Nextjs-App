@@ -35,7 +35,7 @@ export default function Dashboard() {
     const userData = localStorage.getItem('user');
     if (userData) {
       const user = JSON.parse(userData);
-      setUser(user);
+      setUser(user.data);
     }
   }, [])
 

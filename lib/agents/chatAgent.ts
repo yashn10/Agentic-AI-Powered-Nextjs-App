@@ -5,7 +5,7 @@ import { createAgent } from "langchain";
 
 
 const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL_4,
+    model: process.env.GROQ_MODEL,
     temperature: 0.3,
     maxTokens: 1500,
 });

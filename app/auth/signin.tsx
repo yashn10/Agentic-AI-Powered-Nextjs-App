@@ -8,6 +8,7 @@ import { useContext } from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from 'next/navigation';
 import userContext from "@/components/userContext";
+import { toast } from "sonner";
 
 
 interface SigninProps {
@@ -23,25 +24,61 @@ const Signin = ({ openDialogue, closeDialogue }: SigninProps) => {
 
     const googleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse: any) => {
-            const userInfo = await axios.get(
-                'https://www.googleapis.com/oauth2/v3/userinfo',
-                { headers: { Authorization: 'Bearer ' + tokenResponse.access_token, Accept: 'application/json' } },
-            );
+            try {
+                console.log("[Google Login] Authorization code received");
 
-            console.log(userInfo);
-            const data = userInfo?.data;
+                const backendResponse = await axios.post('/api/auth', {
+                    code: tokenResponse.code,
+                });
 
-            if (typeof window !== 'undefined') {
-                localStorage.setItem('user', JSON.stringify(data));
+                const { access_token, refresh_token, expiry_date } = backendResponse.data;
+
+                console.log("[Google Login] Tokens received:", {
+                    access_token: access_token ? "✓ Yes" : "✗ No",
+                    refresh_token: refresh_token ? "✓ Yes" : "✗ No",
+                });
+
+                const userInfo = await axios.get(
+                    'https://www.googleapis.com/oauth2/v3/userinfo',
+                    {
+                        headers: {
+                            Authorization: `Bearer ${access_token}`,
+                            Accept: 'application/json'
+                        }
+                    },
+                );
+
+                const userData = userInfo?.data;
+
+                if (typeof window !== 'undefined') {
+                    localStorage.setItem('user', JSON.stringify({
+                        data: userData,
+                        tokenResponse: {
+                            access_token,
+                            refresh_token,
+                            expiry_date,
+                        }
+                    }));
+                }
+
+                setUser(userData);
+                toast.success("Signed in successfully!");
+                closeDialogue(true);
+                router.push('/dashboard');
+            } catch (err) {
+                console.error("[Google Login] Error:", err);
+                toast.error("Failed to complete sign in");
             }
-
-            // update context
-            setUser(data);
-            closeDialogue(true);
-            router.push('/dashboard');
         },
-        onError: errorResponse => console.log(errorResponse),
-    });
+        onError: (errorResponse: any) => {
+            console.error("[Google Login] Error:", errorResponse);
+            toast.error("Failed to sign in with Google");
+        },
+        auth_type: "reauthenticate", // Optional: Force reauth
+        prompt: "consent",
+        scope: "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send openid email profile",
+    } as any);
+
 
     return (
 
