@@ -7,7 +7,7 @@ import { geocodeTool, getWeatherTool, searchFlightsTool, searchHotelsTool } from
 
 
 const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL_4,
+    model: process.env.GROQ_MODEL,
     temperature: 0.4,
     maxTokens: 3000
 });
