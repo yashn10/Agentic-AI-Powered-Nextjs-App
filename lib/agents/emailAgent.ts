@@ -1,15 +1,9 @@
 // lib/agents/emailAgent.ts
-import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-import { generateEmailTool, askForInfoTool, readEmailsTool, sendEmailTool, searchEmailsTool } from "@/app/api/tools/email";
+import { llmDefault } from "@/lib/llm/groq";
+import { generateEmailTool, askForInfoTool, readEmailsTool, sendEmailTool, searchEmailsTool } from "@/lib/tools/emailTools";
+import { errorHandling, networkRetry, toolLimit } from "@/lib/middleware";
 import z from "zod";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
-    temperature: 0.3,
-    maxTokens: 1500,
-});
 
 
 const emailContextSchema = z.object({
@@ -22,15 +16,16 @@ const emailContextSchema = z.object({
 
 export async function getEmailAgent() {
     const agent = createAgent({
-        model: llm,
+        model: llmDefault,
         tools: [
-            readEmailsTool,      // ✅ Call this FIRST for any email reading
-            searchEmailsTool,    // ✅ Call this for searching
-            generateEmailTool,   // ✅ Call this to draft
-            sendEmailTool,       // ✅ Call this to send
-            askForInfoTool,      // ✅ Ask user if info is missing
+            readEmailsTool,      // Call this FIRST for any email reading
+            searchEmailsTool,    // Call this for searching
+            generateEmailTool,   // Call this to draft
+            sendEmailTool,       // Call this to send
+            askForInfoTool,      // Ask user if info is missing
         ],
         contextSchema: emailContextSchema,
+        middleware: [networkRetry, toolLimit, errorHandling],
         systemPrompt: `You are Email Mastery Agent - an expert email assistant.
 
 ## Your Capabilities

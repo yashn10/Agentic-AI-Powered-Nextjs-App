@@ -1,20 +1,13 @@
 // lib/agents/travelAgent.ts
-import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-import { searchFlightsTool, searchHotelsTool, getWeatherTool, getDirectionsTool, geocodeTool } from "@/app/api/tools/travel";
-import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "../middleware";
-
-
-const llm = new ChatGroq({
-   model: process.env.GROQ_MODEL_3,
-   temperature: 0.3,
-   maxTokens: 2000,
-});
+import { llmScout } from "@/lib/llm/groq";
+import { searchFlightsTool, searchHotelsTool, getWeatherTool, getDirectionsTool, geocodeTool } from "@/lib/tools/travelTools";
+import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "@/lib/middleware";
 
 
 export async function getTravelAgent() {
    const agent = createAgent({
-      model: llm,
+      model: llmScout,
       tools: [
          geocodeTool,
          searchFlightsTool,

@@ -1,16 +1,9 @@
-// app/api/tools/interview.ts
-import { ChatGroq } from "@langchain/groq";
-import axios from "axios";
+// lib/tools/interviewTools.ts — Interview preparation tools
+import { HumanMessage } from "@langchain/core/messages";
 import { tool } from "langchain";
 import * as z from "zod";
-import { HumanMessage } from "@langchain/core/messages";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
-    temperature: 0.4,
-    maxTokens: 2000,
-});
+import axios from "axios";
+import { llmCreative } from "@/lib/llm/groq";
 
 
 export const generateInterviewQuestionsTool = tool(
@@ -23,7 +16,6 @@ export const generateInterviewQuestionsTool = tool(
                 });
             }
 
-            // ✅ FIXED: Use proper message format
             const prompt = `Generate exactly 5 interview questions for a ${input.role} position${input.company ? ` at ${input.company}` : " in tech"
                 }. 
 Focus on: ${input.focus || "general technical skills and problem solving"}.
@@ -34,7 +26,7 @@ Format your response as a valid JSON array ONLY (no markdown, no extra text):
   ...
 ]`;
 
-            const response = await llm.invoke([
+            const response = await llmCreative.invoke([
                 new HumanMessage(prompt),
             ]);
 
@@ -91,7 +83,6 @@ export const analyzeResponseTool = tool(
                 });
             }
 
-            // ✅ FIXED: Use proper message format
             const prompt = `Analyze this interview answer:
 
 Question: ${input.question}
@@ -105,7 +96,7 @@ Provide feedback in JSON format ONLY (no markdown):
   "betterAnswer": "..."
 }`;
 
-            const response = await llm.invoke([
+            const response = await llmCreative.invoke([
                 new HumanMessage(prompt),
             ]);
 
@@ -183,7 +174,6 @@ export const searchInterviewTipsTool = tool(
                 });
             }
 
-            // ✅ FIXED: Proper YouTube API call with error handling
             const response = await axios.get(
                 "https://www.googleapis.com/youtube/v3/search",
                 {
@@ -247,7 +237,6 @@ export const createStudyPlanTool = tool(
                 });
             }
 
-            // ✅ FIXED: Use proper message format
             const prompt = `Create a ${input.days || 7}-day interview preparation study plan for:
 
 Role: ${input.role}
@@ -269,7 +258,7 @@ Format as a detailed day-by-day JSON plan:
   ]
 }`;
 
-            const response = await llm.invoke([
+            const response = await llmCreative.invoke([
                 new HumanMessage(prompt),
             ]);
 

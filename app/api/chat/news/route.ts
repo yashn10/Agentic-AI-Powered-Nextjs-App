@@ -1,6 +1,6 @@
 // app/api/chat/news/route.ts
 import { NextResponse } from "next/server";
-import { getNewsAgent } from "../../../../lib/agents/newsAgent";
+import { getNewsAgent } from "@/lib/agents/newsAgent";
 
 
 export async function POST(req: Request) {
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "empty query" }, { status: 400 });
         }
 
-        const agent = await getNewsAgent(userQuery);
+        // Agent now has its own search tool — no need to pre-fetch news
+        const agent = await getNewsAgent();
 
         let result: any;
         try {
@@ -45,7 +46,6 @@ export async function POST(req: Request) {
             const lastMessage = result.messages[result.messages.length - 1];
 
             if (lastMessage?.content) {
-
                 // Find JSON in response
                 const jsonMatch = lastMessage.content.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {

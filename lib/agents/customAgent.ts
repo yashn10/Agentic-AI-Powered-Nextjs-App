@@ -1,23 +1,16 @@
 // lib/agents/customAgent.ts
-import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "../middleware";
-import { tavilySearchTool } from "@/app/api/tools/custom";
-import { geocodeTool, getWeatherTool, searchFlightsTool, searchHotelsTool } from "@/app/api/tools/travel";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
-    temperature: 0.4,
-    maxTokens: 3000
-});
+import { llmDefault } from "@/lib/llm/groq";
+import { tavilySearchTool } from "@/lib/tools/tavilySearch";
+import { geocodeTool, getWeatherTool, searchFlightsTool, searchHotelsTool } from "@/lib/tools/travelTools";
+import { errorHandling, networkRetry, toolLimit, schemaValidationMiddleware } from "@/lib/middleware";
 
 
 export async function getCustomSearchAgent() {
     const searchAgent = createAgent({
-        model: llm,
+        model: llmDefault,
         tools: [tavilySearchTool],
-        middleware: [schemaValidationMiddleware, networkRetry, toolLimit, errorHandling],
+        middleware: [networkRetry, toolLimit, errorHandling],
         systemPrompt: `You are a web researcher specialist who can answer questions using the web search tool. Use tavily_search(query) when you need search results. You are a user-facing assistant. Never describe tools, APIs, function calls, or backend processes.
 If you need to look something up, call the search tool silently — do not mention that you used it.
 Always respond directly to the user with helpful, user-facing text only.
@@ -32,7 +25,7 @@ Keep answers concise and avoid implementation details.`.trim(),
 
 export async function getUnifiedAgent() {
     return createAgent({
-        model: llm,
+        model: llmDefault,
         tools: [
             // travel
             geocodeTool,
@@ -44,9 +37,9 @@ export async function getUnifiedAgent() {
             tavilySearchTool,
         ],
         middleware: [
-            schemaValidationMiddleware, // validate inputs first
-            networkRetry,               // retry failed network calls
-            toolLimit,                  // limit use & rate
+            schemaValidationMiddleware,
+            networkRetry,
+            toolLimit,
             errorHandling,
         ],
         systemPrompt: `You are a helpful assistant that can:

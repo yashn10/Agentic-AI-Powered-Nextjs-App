@@ -1,4 +1,4 @@
-// api/chat/personalAgent/route.ts
+// app/api/chat/personalAgent/route.ts
 import { NextResponse } from 'next/server';
 import getChatAgent from "@/lib/agents/chatAgent";
 import getTravelAgent from "@/lib/agents/travelAgent";
@@ -23,29 +23,36 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "No supported agent requested" }, { status: 400 });
     }
 
-    const input = { messages }; // correct shape for agent.invoke
+    const input = { messages };
 
-    if (valid.length > 1) {
-        const agent = await getUnifiedAgent();
-        const result = await agent.invoke(input);
-        return NextResponse.json(result);
-    }
-    if (valid.includes("chat")) {
-        const agent = await getChatAgent();
-        const result = await agent.invoke(input);
-        return NextResponse.json(result);
-    }
-    if (valid.includes("travel")) {
-        const agent = await getTravelAgent();
-        const result = await agent.invoke(input);
-        return NextResponse.json(result);
-    }
-    if (valid.includes("web-search")) {
-        const agent = await getCustomSearchAgent();
-        const result = await agent.invoke(input);
-        console.log(result);
-        return NextResponse.json(result);
-    }
+    try {
+        let agent;
 
-    return NextResponse.json({ error: "No agent matched" }, { status: 400 });
+        if (valid.length > 1) {
+            agent = await getUnifiedAgent();
+        } else if (valid.includes("chat")) {
+            agent = await getChatAgent();
+        } else if (valid.includes("travel")) {
+            agent = await getTravelAgent();
+        } else if (valid.includes("web-search")) {
+            agent = await getCustomSearchAgent();
+        } else {
+            return NextResponse.json({ error: "No agent matched" }, { status: 400 });
+        }
+
+        const result = await agent.invoke(input);
+
+        // Standardized response format — extract assistant content
+        const response = result.messages[result.messages.length - 1]?.content || "No response";
+
+        return NextResponse.json({
+            assistant: response,
+        });
+    } catch (err) {
+        console.error("[Personal Agent] Error:", err);
+        return NextResponse.json(
+            { error: "agent execution failed", detail: String(err) },
+            { status: 500 }
+        );
+    }
 }
