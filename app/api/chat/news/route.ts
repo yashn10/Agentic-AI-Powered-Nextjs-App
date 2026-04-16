@@ -5,7 +5,7 @@ import { getNewsAgent } from "@/lib/agents/newsAgent";
 
 export async function POST(req: Request) {
     try {
-        const body = await req.json();
+        const body = await req.json().catch(() => ({}));
         const messages = Array.isArray(body?.messages) ? body.messages : [];
 
         if (!messages.length) {
@@ -25,13 +25,10 @@ export async function POST(req: Request) {
         let result: any;
         try {
             result = await agent.invoke({
-                messages: messages.map((m: any) => ({
-                    role: m.role,
-                    content: m.content,
-                })),
+                messages: [{ role: "user", content: userQuery }],
             });
         } catch (err) {
-            console.error("[News Agent] Error:", err);
+            console.error("[API] Agent execution error:", err);
             return NextResponse.json(
                 { error: "agent execution failed", detail: String(err) },
                 { status: 500 }
@@ -65,11 +62,11 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({
-            assistant: response,
+            assistant: structuredResponse,
         });
 
     } catch (err) {
-        console.error("[News Agent] Route error:", err);
+        console.error("[API] Route error:", err);
         return NextResponse.json(
             { error: "internal server error", detail: String(err) },
             { status: 500 }
