@@ -1,6 +1,6 @@
 // app/api/chat/news/route.ts
 import { NextResponse } from "next/server";
-import { getNewsAgent } from "../../../../lib/agents/newsAgent";
+import { getNewsAgent } from "@/lib/agents/newsAgent";
 
 
 export async function POST(req: Request) {
@@ -15,8 +15,12 @@ export async function POST(req: Request) {
         const lastUser = messages[messages.length - 1];
         const userQuery = String(lastUser?.content ?? "").trim();
 
-        // ✅ PASS FULL CONVERSATION HISTORY
-        const agent = await getNewsAgent(userQuery);
+        if (!userQuery) {
+            return NextResponse.json({ error: "empty query" }, { status: 400 });
+        }
+
+        // Agent now has its own search tool — no need to pre-fetch news
+        const agent = await getNewsAgent();
 
         let result: any;
         try {
@@ -34,26 +38,30 @@ export async function POST(req: Request) {
             );
         }
 
-        const lastMessage = result.messages[result.messages.length - 1];
-        let response = lastMessage?.content || "No response";
+        // Extract JSON from last message
+        let structuredResponse = {
+            summary: "Unable to process your request",
+            sentiment: "neutral",
+            sources: []
+        };
 
-        // ✅ Detect JSON vs detailed response
-        const jsonMatch = response.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-        if (jsonMatch) {
-            try {
-                const parsed = JSON.parse(jsonMatch[0]);
-                response = {
-                    type: "summary",
-                    data: parsed
-                };
-            } catch (e) {
-                // Not valid JSON, treat as text
+        try {
+            const lastMessage = result.messages[result.messages.length - 1];
+
+            if (lastMessage?.content) {
+                // Find JSON in response
+                const jsonMatch = lastMessage.content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    structuredResponse = {
+                        summary: parsed.summary || "No summary available",
+                        sentiment: parsed.sentiment || "neutral",
+                        sources: Array.isArray(parsed.sources) ? parsed.sources : []
+                    };
+                }
             }
-        } else {
-            response = {
-                type: "detailed",
-                content: response
-            };
+        } catch (parseErr) {
+            console.error("[API] JSON parse error:", parseErr);
         }
 
         return NextResponse.json({

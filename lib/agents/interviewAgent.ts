@@ -1,25 +1,20 @@
 // lib/agents/interviewAgent.ts
-import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-import { generateInterviewQuestionsTool, analyzeResponseTool, searchInterviewTipsTool, createStudyPlanTool } from "@/app/api/tools/interview";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
-    temperature: 0.4,
-    maxTokens: 2000,
-});
+import { llmCreative } from "@/lib/llm/groq";
+import { generateInterviewQuestionsTool, analyzeResponseTool, searchInterviewTipsTool, createStudyPlanTool } from "@/lib/tools/interviewTools";
+import { errorHandling, networkRetry, toolLimit } from "@/lib/middleware";
 
 
 export async function getInterviewAgent() {
     const agent = createAgent({
-        model: llm,
+        model: llmCreative,
         tools: [
             generateInterviewQuestionsTool,
             analyzeResponseTool,
             searchInterviewTipsTool,
             createStudyPlanTool,
         ],
+        middleware: [networkRetry, toolLimit, errorHandling],
         systemPrompt: `
 YOU ARE A PROFESSIONAL TECHNICAL INTERVIEWER conducting a real job interview.
 

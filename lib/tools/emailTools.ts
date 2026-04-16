@@ -1,24 +1,8 @@
-// app/api/tools/email.ts
+// lib/tools/emailTools.ts — Gmail email tools
 import { tool } from "langchain";
 import * as z from "zod";
 import { google } from "googleapis";
 
-
-const CLIENT_ID = process.env.GOOGLE_AUTH_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_AUTH_CLIENT_SECRET;
-if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.warn("Warning: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in env.");
-}
-
-
-function safeParseJson(s: string | undefined | null) {
-    if (!s) return null;
-    try {
-        return JSON.parse(s as string);
-    } catch {
-        return null;
-    }
-}
 
 function base64UrlEncode(input: string) {
     return Buffer.from(input)
@@ -62,7 +46,7 @@ async function getUserGmailClient(config: any = {}) {
         process.env.NEXT_PUBLIC_GOOGLE_OAUTH_REDIRECT_URL
     );
 
-    // ✅ Set credentials with refresh token
+    // Set credentials with refresh token
     const credentials: any = {};
     if (userToken.refresh_token) {
         credentials.refresh_token = userToken.refresh_token;
@@ -76,8 +60,7 @@ async function getUserGmailClient(config: any = {}) {
 
     oauth2Client.setCredentials(credentials);
 
-    // ✅ CRITICAL: Let googleapis handle token refresh automatically
-    // When the token expires, googleapis will use the refresh_token to get a new one
+    // Let googleapis handle token refresh automatically
     return google.gmail({ version: "v1", auth: oauth2Client });
 }
 
@@ -139,9 +122,7 @@ export const readEmailsTool = tool(
     async ({ query = "is:unread", maxResults = 5 }: any, config: any = {}) => {
         try {
             console.log(`[read_emails] query="${query}", maxResults=${maxResults}`);
-            console.log(`[read_emails] config received:`, config?.configurable ? "✓ Yes" : "✗ No");
 
-            // ✅ Pass config (not context) to getUserGmailClient
             const gmail = await getUserGmailClient(config);
 
             const safeQuery = (typeof query === "string" && query.trim().length > 0)
@@ -230,7 +211,7 @@ export const sendEmailTool = tool(
                 };
             }
 
-            const gmail = await getUserGmailClient(config); // ✅ Pass config
+            const gmail = await getUserGmailClient(config);
 
             let fromEmail = config?.configurable?.user?.email || null;
 
@@ -311,7 +292,7 @@ export const searchEmailsTool = tool(
             }
 
             console.log(`[search_emails] query="${query}"`);
-            const gmail = await getUserGmailClient(config); // ✅ Pass config
+            const gmail = await getUserGmailClient(config);
 
             const response = await gmail.users.messages.list({
                 userId: "me",

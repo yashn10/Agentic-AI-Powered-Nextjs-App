@@ -1,11 +1,12 @@
-// app/api/tools/travel.ts
+// lib/tools/travelTools.ts — Travel tools (flights, hotels, weather, directions, geocoding)
 import axios from "axios";
 import { tool } from "langchain";
 import * as z from "zod";
 import qs from "qs";
 import { parseUserDate } from "@/lib/utils/dateUtils";
 
-// Get Amadeus API Token (with caching)
+
+// Amadeus API Token (with caching)
 let amadeusTokenCache: { token: string; expiresAt: number } | null = null;
 
 
@@ -16,7 +17,6 @@ async function getAmadeusToken() {
     }
 
     try {
-        // ✅ FIXED: Use form-urlencoded instead of JSON
         const response = await axios.post(
             "https://test.api.amadeus.com/v1/security/oauth2/token",
             qs.stringify({
@@ -52,17 +52,11 @@ async function getAmadeusToken() {
 export const searchFlightsTool = tool(
     async (input: any) => {
         const token = await getAmadeusToken();
-
-        // ✅ PARSE THE DATE
         const parsedDate = parseUserDate(input.date);
 
-        console.log("[searchFlights] Input params:", JSON.stringify(input, null, 2));
-        console.log("[searchFlights] Original date:", input.date);
+        console.log("[searchFlights] Input:", JSON.stringify(input, null, 2));
         console.log("[searchFlights] Parsed date:", parsedDate);
 
-        console.log("[searchFlights] Input params:", JSON.stringify(input, null, 2));
-
-        // ✅ Don't catch here - let errors bubble to middleware
         const response = await axios.get(
             "https://test.api.amadeus.com/v2/shopping/flight-offers",
             {
@@ -78,12 +72,6 @@ export const searchFlightsTool = tool(
                     Authorization: `Bearer ${token}`,
                 },
             }
-        );
-
-        console.log(
-            "[searchFlights] Success:",
-            response.data.data?.length,
-            "flights found"
         );
 
         if (!response.data.data || response.data.data.length === 0) {
@@ -114,7 +102,7 @@ export const searchFlightsTool = tool(
             flights: flights.slice(0, 5),
             count: flights.length,
         };
-        // ✅ No try/catch here - errors propagate to middleware
+        // No try/catch — errors propagate to middleware
     },
     {
         name: "search_flights",
@@ -141,18 +129,11 @@ export const searchFlightsTool = tool(
 export const searchHotelsTool = tool(
     async (input: any) => {
         const token = await getAmadeusToken();
-
-        // ✅ PARSE BOTH DATES
         const checkInDate = parseUserDate(input.checkIn);
         const checkOutDate = parseUserDate(input.checkOut);
 
-        console.log("[searchHotels] Input params:", JSON.stringify(input, null, 2));
-        console.log("[searchHotels] Parsed dates:", {
-            checkIn: checkInDate,
-            checkOut: checkOutDate,
-        });
-
-        console.log("[searchHotels] Input params:", JSON.stringify(input, null, 2));
+        console.log("[searchHotels] Input:", JSON.stringify(input, null, 2));
+        console.log("[searchHotels] Parsed dates:", { checkIn: checkInDate, checkOut: checkOutDate });
 
         const response = await axios.get(
             "https://test.api.amadeus.com/v3/shopping/hotel-offers",
@@ -168,12 +149,6 @@ export const searchHotelsTool = tool(
                     Authorization: `Bearer ${token}`,
                 },
             }
-        );
-
-        console.log(
-            "[searchHotels] Success:",
-            response.data.data?.length,
-            "hotels found"
         );
 
         if (!response.data.data || response.data.data.length === 0) {
@@ -208,7 +183,7 @@ export const searchHotelsTool = tool(
             hotels: hotels.slice(0, 10),
             count: hotels.length,
         };
-        // ✅ No try/catch here - errors propagate to middleware
+        // No try/catch — errors propagate to middleware
     },
     {
         name: "search_hotels",

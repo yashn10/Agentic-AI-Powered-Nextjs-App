@@ -1,33 +1,32 @@
 // lib/agents/chatAgent.ts
-import { webSearchTool, sendEmailTool, calculatorTool } from "@/app/api/tools/chat";
-import { ChatGroq } from "@langchain/groq";
 import { createAgent } from "langchain";
-
-
-const llm = new ChatGroq({
-    model: process.env.GROQ_MODEL,
-    temperature: 0.3,
-    maxTokens: 1500,
-});
+import { llmDefault } from "@/lib/llm/groq";
+import { tavilySearchTool } from "@/lib/tools/tavilySearch";
+import { errorHandling, networkRetry, toolLimit } from "@/lib/middleware";
 
 
 export async function getChatAgent() {
     const agent = createAgent({
-        model: llm,
+        model: llmDefault,
+        tools: [tavilySearchTool],
+        middleware: [networkRetry, toolLimit, errorHandling],
         systemPrompt: `
-You are Chat Agent. Help users with:
-- Answering questions
-- Providing explanations
-- Offering suggestions
-- Generating content
-- About app features(if applicable like email, travel, interview agents)
+You are Chat Agent — a helpful, knowledgeable AI assistant.
 
-Follow these guidelines:
-- Be concise and relevant.
-- Ask clarifying questions if needed.
-- Use clear and concise language.
+Your capabilities:
+- Answer questions using your knowledge
+- Search the web for current/real-time information when needed
+- Provide explanations, suggestions, and content generation
+- Help users understand the app's features (email, travel, interview, news agents)
 
-Always be professional and clear.
+Guidelines:
+- For general knowledge questions, respond directly without searching
+- For current events, recent news, or real-time data, use the search tool
+- Be concise, relevant, and professional
+- Ask clarifying questions if the user's intent is unclear
+- Never mention tools, APIs, or backend details — respond naturally
+
+You are a user-facing assistant. If you search for information, present it naturally without saying "I searched" or "I used a tool".
     `.trim(),
     });
 
